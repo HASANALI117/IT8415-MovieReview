@@ -48,14 +48,21 @@ CREATE INDEX idx_persons_name ON dbProj_persons (full_name);
 CREATE TABLE dbProj_movies (
     movie_id          INT             NOT NULL AUTO_INCREMENT,
     title             VARCHAR(255)    NOT NULL,
-    short_description VARCHAR(500)    NOT NULL,                 -- home-page blurb
+    tmdb_id           INT             NULL,                     -- external TMDB id (M3 seeder)
+    short_description VARCHAR(500)    NULL,                     -- home-page blurb (NULL-able: M3 seeder fix)
     synopsis          TEXT            NULL,                     -- full "View More" text
     release_year      SMALLINT        NULL,
     duration_min      INT             NULL,
     image_url         VARCHAR(500)    NOT NULL,                 -- >=1 image 
     media_url         VARCHAR(500)    NULL,                     -- trailer audio/video
     download_url      VARCHAR(500)    NULL,                     -- optional download
-    created_by        INT             NOT NULL,                 -- owning creator
+    fanart_bg         VARCHAR(500)    NULL,                     -- cinematic backdrop (M3 seeder)
+    fanart_logo       VARCHAR(500)    NULL,                     -- transparent title logo (M3 seeder)
+    color_tl          CHAR(6)         NULL,                     -- gradient hex: top-left    (M3 seeder)
+    color_tr          CHAR(6)         NULL,                     -- gradient hex: top-right   (M3 seeder)
+    color_br          CHAR(6)         NULL,                     -- gradient hex: bottom-right (M3 seeder)
+    color_bl          CHAR(6)         NULL,                     -- gradient hex: bottom-left  (M3 seeder)
+    created_by        INT             NULL,                     -- owning creator (NULL-able: M3 seeder fix)
     is_published      TINYINT(1)      NOT NULL DEFAULT 0,       -- publish workflow
     published_at      TIMESTAMP       NULL,
     view_count        INT             NOT NULL DEFAULT 0,       -- popularity metric
