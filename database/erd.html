@@ -128,14 +128,21 @@ erDiagram
     dbProj_movies {
         int movie_id PK
         varchar title "FULLTEXT"
-        varchar short_description "FULLTEXT"
+        int tmdb_id "external TMDB id"
+        varchar short_description "FULLTEXT, nullable"
         text synopsis "FULLTEXT"
         smallint release_year
         int duration_min
         varchar image_url
         varchar media_url
         varchar download_url
-        int created_by FK
+        varchar fanart_bg "cinematic backdrop"
+        varchar fanart_logo "title logo"
+        char color_tl "gradient hex"
+        char color_tr "gradient hex"
+        char color_br "gradient hex"
+        char color_bl "gradient hex"
+        int created_by FK "nullable"
         tinyint is_published
         timestamp published_at
         int view_count "popularity"
