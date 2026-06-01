@@ -1,10 +1,12 @@
 <?php
+// creator_movies.php
+// Creator Panel: shows all movies belonging to the logged-in creator
 
 session_start();
 require_once 'DBconn.php';
 require_once 'Movie.php';
 
-// access control, only available for owners and admins
+// --- Access control: creators and admins only ---
 if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['creator', 'admin'])) {
     header('Location: index.php');
     exit;
@@ -13,7 +15,7 @@ if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['creator', 'ad
 $creator_id = $_SESSION['user_id'];
 $movies     = Movie::getByCreator($creator_id);
 
-// handle publish/unpublish action from this page
+// Handle publish/unpublish action from this page
 $message = '';
 if (isset($_POST['action'], $_POST['movie_id'])) {
     $mid    = (int)$_POST['movie_id'];
@@ -30,7 +32,7 @@ if (isset($_POST['action'], $_POST['movie_id'])) {
         $message = 'Movie deleted.';
     }
 
-    // Rrload list after action
+    // Reload list after action
     $movies = Movie::getByCreator($creator_id);
 }
 ?>
@@ -128,7 +130,7 @@ if (isset($_POST['action'], $_POST['movie_id'])) {
                     <td><?php echo date('d M Y', strtotime($m['created_at'])); ?></td>
                     <td>
                         <?php if (!$m['is_published']): ?>
-                            <!-- still in draft, can edit, publish, or delete -->
+                            <!-- Draft: can edit, publish, or delete -->
                             <a class="btn btn-edit"
                                href="creator_edit_movie.php?id=<?php echo $m['movie_id']; ?>">Edit</a>
 
@@ -153,7 +155,7 @@ if (isset($_POST['action'], $_POST['movie_id'])) {
                             </form>
 
                         <?php else: ?>
-                            <!-- published, can only unpublish -->
+                            <!-- Published: can only unpublish -->
                             <form method="post" style="display:inline">
                                 <input type="hidden" name="movie_id"
                                        value="<?php echo $m['movie_id']; ?>">

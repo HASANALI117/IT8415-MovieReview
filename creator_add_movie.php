@@ -479,11 +479,43 @@ function showMediaName(input) {
     }
 }
 
+// AJAX: check if title already exists as user types (onblur)
+
+function checkTitleAjax() {
+    const titleField = document.getElementById('title');
+    const err        = document.getElementById('titleErr');
+    const title      = titleField.value.trim();
+
+    if (title === '') return;
+
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            var response = JSON.parse(this.responseText);
+            if (response.exists) {
+                titleField.classList.add('error-field');
+                err.textContent = 'A movie with this title already exists.';
+                document.getElementById('btnSubmit').disabled = true;
+            } else {
+                titleField.classList.remove('error-field');
+                if (err.textContent.includes('already exists')) {
+                    err.textContent = '';
+                }
+                handleKeyUp();
+            }
+        }
+    };
+    xmlhttp.open("GET", "ajax_check_title.php?title=" + encodeURIComponent(title), true);
+    xmlhttp.send();
+}
+
 // init char counts on page load
 
 window.onload = function() {
     updateCharCount('short_description', 'shortDescCount', 500);
     handleKeyUp();
+    // attach AJAX check to title field onblur
+    document.getElementById('title').addEventListener('blur', checkTitleAjax);
 };
 </script>
 
