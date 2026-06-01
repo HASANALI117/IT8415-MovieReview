@@ -16,7 +16,7 @@ class Movie {
     private $created_by;
     private $is_published;
 
-    // getters and setters 
+    // getters and setters
     public function getMovieId()         { return $this->movie_id; }
     public function getTitle()           { return $this->title; }
     public function getShortDesc()       { return $this->short_description; }
@@ -29,16 +29,16 @@ class Movie {
     public function getCreatedBy()       { return $this->created_by; }
     public function getIsPublished()     { return $this->is_published; }
 
-    public function setTitle($v)         { $this->title           = trim($v); }
+    public function setTitle($v)         { $this->title             = trim($v); }
     public function setShortDesc($v)     { $this->short_description = trim($v); }
-    public function setSynopsis($v)      { $this->synopsis        = trim($v); }
-    public function setReleaseYear($v)   { $this->release_year    = (int)$v; }
-    public function setDurationMin($v)   { $this->duration_min    = (int)$v; }
-    public function setImageUrl($v)      { $this->image_url       = $v; }
-    public function setMediaUrl($v)      { $this->media_url       = $v; }
-    public function setDownloadUrl($v)   { $this->download_url    = $v; }
-    public function setCreatedBy($v)     { $this->created_by      = (int)$v; }
-    public function setIsPublished($v)   { $this->is_published    = (int)$v; }
+    public function setSynopsis($v)      { $this->synopsis          = trim($v); }
+    public function setReleaseYear($v)   { $this->release_year      = (int)$v; }
+    public function setDurationMin($v)   { $this->duration_min      = (int)$v; }
+    public function setImageUrl($v)      { $this->image_url         = $v; }
+    public function setMediaUrl($v)      { $this->media_url         = $v; }
+    public function setDownloadUrl($v)   { $this->download_url      = $v; }
+    public function setCreatedBy($v)     { $this->created_by        = (int)$v; }
+    public function setIsPublished($v)   { $this->is_published      = (int)$v; }
 
     // validation checks
     public function isValid(&$errors) {
@@ -53,7 +53,6 @@ class Movie {
             $errors[] = 'Release year must be between 1888 and 2100.';
         return empty($errors);
     }
-
 
     // inserting, save new movie and return new movie_id or false
     public function addMovie() {
@@ -117,7 +116,6 @@ class Movie {
         return $found;
     }
 
-
     // updating, save any edits for unpublished movies only
     public function updateMovie() {
         $conn = getConnection();
@@ -151,13 +149,12 @@ class Movie {
             $this->created_by
         );
 
-        $ok = $stmt->execute();
+        $ok       = $stmt->execute();
         $affected = $stmt->affected_rows;
         $stmt->close();
         $conn->close();
         return ($ok && $affected > 0);
     }
-
 
     // selecting all movies belonging to a specific creator
     public static function getByCreator($creator_id) {
@@ -184,7 +181,6 @@ class Movie {
         $conn->close();
         return $movies;
     }
-
 
     // selecting all published and unpublished movies for admin
     public static function getAllMovies() {
@@ -222,7 +218,6 @@ class Movie {
         return $ok;
     }
 
-
     // call publish/unpublish stored procedure
     public static function setPublished($movie_id, $publish) {
         $conn = getConnection();
@@ -235,7 +230,7 @@ class Movie {
         return $ok;
     }
 
-    // attach and/or replace categories for a movie  
+    // attach and/or replace categories for a movie
     public static function setCategories($movie_id, array $category_ids) {
         $conn = getConnection();
 
@@ -260,20 +255,22 @@ class Movie {
         $conn->close();
     }
 
-
     // get category ids for a movie
     public static function getCategoryIds($movie_id) {
         $conn = getConnection();
+
         $stmt = $conn->prepare(
             "SELECT category_id FROM dbProj_movie_categories WHERE movie_id = ?"
         );
         $stmt->bind_param("i", $movie_id);
         $stmt->execute();
         $result = $stmt->get_result();
+
         $ids = [];
         while ($row = $result->fetch_assoc()) {
             $ids[] = $row['category_id'];
         }
+
         $stmt->close();
         $conn->close();
         return $ids;

@@ -510,11 +510,45 @@ function showMediaName(input) {
     }
 }
 
+// AJAX: check if title already exists (excluding this movie) as user types
+
+function checkTitleAjax() {
+    const titleField = document.getElementById('title');
+    const err        = document.getElementById('titleErr');
+    const title      = titleField.value.trim();
+    const exclude    = <?php echo $movie_id; ?>;
+
+    if (title === '') return;
+
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            var response = JSON.parse(this.responseText);
+            if (response.exists) {
+                titleField.classList.add('error-field');
+                err.textContent = 'A movie with this title already exists.';
+                document.getElementById('btnSubmit').disabled = true;
+            } else {
+                titleField.classList.remove('error-field');
+                if (err.textContent.includes('already exists')) {
+                    err.textContent = '';
+                }
+                handleKeyUp();
+            }
+        }
+    };
+    xmlhttp.open("GET", "ajax_check_title.php?title=" + encodeURIComponent(title)
+                        + "&exclude=" + exclude, true);
+    xmlhttp.send();
+}
+
 // init char counts and button state on page load
 
 window.onload = function() {
     updateCharCount('short_description', 'shortDescCount', 500);
     handleKeyUp();
+    // attach AJAX title check on blur
+    document.getElementById('title').addEventListener('blur', checkTitleAjax);
 };
 </script>
 
