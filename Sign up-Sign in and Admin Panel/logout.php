@@ -6,7 +6,7 @@ include 'Header.php';
 
 echo '<h1>Logged out</h1>';
 
-if (!isset($_SESSION['Username']) )
+if (!isset($_SESSION['user_id']) )
 {
      require_once('LoginFunctions.php');
      $url = absolute_url();

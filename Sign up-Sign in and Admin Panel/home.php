@@ -4,8 +4,8 @@ include 'Header.php';
 echo '<br />';
 echo '<h1>Welcome to the home page</h1>';
 
-$Username = $_SESSION['Username'];
-$Role = $_SESSION['Role'];
+$Username = $_SESSION['username'] ?? '';
+$Role = $_SESSION['role'] ?? '';
 
 echo "<br /><h3>Hello $Username</h3>";
 echo "<p>Your role: $Role</p>";
