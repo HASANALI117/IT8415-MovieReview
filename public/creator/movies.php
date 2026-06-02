@@ -8,7 +8,7 @@ require_once __DIR__ . '/../../src/Movie.php';
 
 // --- Access control: creators and admins only ---
 if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['creator', 'admin'])) {
-    header('Location: /index.php');
+    header('Location: ' . app_url('index.php'));
     exit;
 }
 

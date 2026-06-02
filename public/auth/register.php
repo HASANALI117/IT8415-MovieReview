@@ -18,8 +18,12 @@ if (isset($_POST['submitted'])) {
     $errors = $user->isValid();
 
     if (empty($errors) && $user->save()) {
-        $registered = true;
-        $reg_name   = $user->username;
+        // Auto-login the new account and go straight to the homepage.
+        $_SESSION['user_id']  = $user->userId;
+        $_SESSION['username'] = $user->username;
+        $_SESSION['role']     = 'viewer';
+        header('Location: ' . app_url('index.php'));
+        exit;
     }
 }
 

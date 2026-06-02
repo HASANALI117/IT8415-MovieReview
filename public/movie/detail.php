@@ -179,7 +179,7 @@ $(document).ready(function() {
         if(rating == 0) { alert("Please select a rating!"); return; }
 
         $.ajax({
-            url: '/ajax/process_comment.php',
+            url: (window.BASE || '/') + 'ajax/process_comment.php',
             method: 'POST',
             data: $(this).serialize() + "&rating=" + rating,
             success: function(response) {
@@ -208,7 +208,7 @@ function confirmDelete(id) {
         modal: true,
         buttons: {
             "Delete": function() {
-                $.post('/ajax/delete_comment.php', {id: id}, function(res) {
+                $.post((window.BASE || '/') + 'ajax/delete_comment.php', {id: id}, function(res) {
                     if(res == 'success') {
                         $(`#comment-${id}`).hide('explode', 1000);
                     }

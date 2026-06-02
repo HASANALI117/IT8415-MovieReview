@@ -7,7 +7,7 @@ require_once __DIR__ . '/../../src/Database.php';
 
 // access control, admins only
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    header('Location: /index.php');
+    header('Location: ' . app_url('index.php'));
     exit;
 }
 
@@ -99,7 +99,7 @@ require __DIR__ . '/../../includes/admin_nav.php';
 
   <!-- report 1: top rated movies in a date range -->
   <div class="glass-panel" style="padding:28px 32px;margin-bottom:32px">
-    <h3 style="margin:0 0 6px">📊 Report 1 — Most Popular Movies</h3>
+    <h3 style="margin:0 0 6px">Report 1 — Most Popular Movies</h3>
     <p style="color:var(--ink-soft);font-size:14px;margin-bottom:20px">Shows the top rated published movies within a selected date range, ordered by average rating.</p>
 
     <form method="get">
@@ -147,7 +147,7 @@ require __DIR__ . '/../../includes/admin_nav.php';
                 <td><?= htmlspecialchars($row['title']) ?></td>
                 <td><?= htmlspecialchars($row['creator'] ?? '—') ?></td>
                 <td><?= $row['release_year'] ?? '—' ?></td>
-                <td><?= number_format($row['avg_rating'], 2) ?> ⭐</td>
+                <td><?= number_format($row['avg_rating'], 2) ?></td>
                 <td><?= (int)$row['rating_count'] ?></td>
                 <td><?= (int)$row['view_count'] ?></td>
                 <td><?= htmlspecialchars($row['published_on'] ?? '—') ?></td>
@@ -162,7 +162,7 @@ require __DIR__ . '/../../includes/admin_nav.php';
 
   <!-- report 2: all movies by a specific creator -->
   <div class="glass-panel" style="padding:28px 32px;margin-bottom:32px">
-    <h3 style="margin:0 0 6px">🎬 Report 2 — Movies by Creator</h3>
+    <h3 style="margin:0 0 6px">Report 2 — Movies by Creator</h3>
     <p style="color:var(--ink-soft);font-size:14px;margin-bottom:20px">Shows all movies (including drafts) submitted by a selected creator.</p>
 
     <form method="get">
@@ -218,7 +218,7 @@ require __DIR__ . '/../../includes/admin_nav.php';
                     <span class="badge-pill badge-pill--draft">Draft</span>
                   <?php endif; ?>
                 </td>
-                <td><?= number_format($row['avg_rating'], 2) ?> ⭐</td>
+                <td><?= number_format($row['avg_rating'], 2) ?></td>
                 <td><?= (int)$row['rating_count'] ?></td>
                 <td><?= (int)$row['view_count'] ?></td>
                 <td><?= $row['published_on'] ? htmlspecialchars($row['published_on']) : '—' ?></td>
