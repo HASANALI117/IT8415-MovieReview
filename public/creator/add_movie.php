@@ -30,6 +30,7 @@ $formData = [
     'synopsis'          => '',
     'release_year'      => '',
     'duration_min'      => '',
+    'director'          => '',
     'selected_cats'     => []
 ];
 
@@ -44,6 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $formData['synopsis']          = trim($_POST['synopsis']         ?? '');
     $formData['release_year']      = trim($_POST['release_year']     ?? '');
     $formData['duration_min']      = trim($_POST['duration_min']     ?? '');
+    $formData['director']          = trim($_POST['director']         ?? '');
     $formData['selected_cats']     = $_POST['categories']            ?? [];
 
     // server-side validation
@@ -80,6 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $movie->setSynopsis($formData['synopsis']);
         $movie->setReleaseYear((int)$formData['release_year']);
         $movie->setDurationMin((int)$formData['duration_min']);
+        $movie->setDirector($formData['director']);
         $movie->setImageUrl($image_url);
         $movie->setCreatedBy($_SESSION['user_id']);
 
@@ -212,6 +215,12 @@ require __DIR__ . '/../../includes/header.php';
                  onblur="validateDuration()" onkeyup="handleKeyUp()">
           <span class="err-label" id="durationErr"></span>
         </div>
+      </div>
+      <div class="form-group">
+        <label for="director">Director</label>
+        <input type="text" id="director" name="director" class="form-control" maxlength="255"
+               placeholder="e.g. Christopher Nolan"
+               value="<?= htmlspecialchars($formData['director']) ?>">
       </div>
     </div>
 

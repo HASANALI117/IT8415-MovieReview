@@ -210,8 +210,10 @@ body::before {
     box-shadow 0.2s;
 }
 .glass-input::placeholder,
-.glass-textarea::placeholder {
-  color: var(--ink-faint);
+.glass-textarea::placeholder,
+.form-control::placeholder {
+  color: var(--ink-soft);
+  opacity: 1; /* Firefox dims placeholders by default — keep it readable */
 }
 .glass-input:focus,
 .glass-select:focus,

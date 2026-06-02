@@ -23,20 +23,8 @@ $stmt_cat->execute();
 $categories = $stmt_cat->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt_cat->close();
 
-// Director
-$stmt_dir = $conn->prepare("SELECT p.full_name FROM dbProj_movie_cast mc JOIN dbProj_persons p ON mc.person_id = p.person_id WHERE mc.movie_id = ? AND mc.role = 'director' LIMIT 1");
-$stmt_dir->bind_param("i", $movie_id);
-$stmt_dir->execute();
-$director_res = $stmt_dir->get_result()->fetch_assoc();
-$director_name = $director_res ? $director_res['full_name'] : "Unknown";
-$stmt_dir->close();
-
-// Cast (non-director), for the Cast & Crew row
-$stmt_cast = $conn->prepare("SELECT p.full_name, mc.role FROM dbProj_movie_cast mc JOIN dbProj_persons p ON mc.person_id = p.person_id WHERE mc.movie_id = ? AND mc.role <> 'director' LIMIT 12");
-$stmt_cast->bind_param("i", $movie_id);
-$stmt_cast->execute();
-$cast = $stmt_cast->get_result()->fetch_all(MYSQLI_ASSOC);
-$stmt_cast->close();
+// Director (flat column on the movie row)
+$director_name = !empty($movie['director']) ? $movie['director'] : "Unknown";
 
 $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
 
@@ -93,19 +81,6 @@ require __DIR__ . '/../../includes/header.php';
       <p class="pdetail-director"><b>Director:</b> <?= htmlspecialchars($director_name) ?></p>
     </div>
   </div>
-
-  <?php if (!empty($cast)): ?>
-    <hr class="section-divider">
-    <h2 class="section-label">Cast &amp; Crew</h2>
-    <div style="display:flex;gap:.6rem;flex-wrap:wrap">
-      <?php foreach ($cast as $c): ?>
-        <span class="pdetail-tag" style="padding:6px 14px">
-          <?= htmlspecialchars($c['full_name']) ?>
-          <span style="color:var(--ink-faint)">&middot; <?= htmlspecialchars($c['role']) ?></span>
-        </span>
-      <?php endforeach; ?>
-    </div>
-  <?php endif; ?>
 
   <!-- ===== Ratings & Reviews ===== -->
   <hr class="section-divider">

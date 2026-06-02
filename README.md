@@ -75,9 +75,6 @@ Loaded by [`database/05_seed_users.sql`](database/05_seed_users.sql). Log in at
 | Admin   | `admin@movie.test` | `Admin@123`   | Full admin panels             |
 | Creator | `jane@movie.test`  | `Creator@123` | Can add/publish movies        |
 | Creator | `marco@movie.test` | `Creator@123` | Second creator                |
-| Creator | `bob@movie.test`   | `Viewer@123`  | Can rate, comment & add movies |
-| Creator | `alice@movie.test` | `Viewer@123`  | Can rate, comment & add movies |
-| Creator | `sam@movie.test`   | `Viewer@123`  | Inactive account (`is_active = 0`) |
 
 > ⚠️ These are throwaway development credentials. Do not seed them in a
 > production deployment.
