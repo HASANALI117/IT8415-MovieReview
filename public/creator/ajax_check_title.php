@@ -3,7 +3,7 @@
 // AJAX endpoint: checks if a movie title already exists in the database
 // called by creator_add_movie.php and creator_edit_movie.php via XMLHttpRequest
 
-session_start();
+require_once __DIR__ . '/../../includes/session.php';
 require_once __DIR__ . '/../../src/Database.php';
 
 // only accept requests from logged-in creators or admins

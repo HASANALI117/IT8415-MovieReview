@@ -1,8 +1,8 @@
 <?php
-// creator_edit_movie.php
+// creator/edit_movie.php
 // Creator Panel: edit an existing draft movie
 
-session_start();
+require_once __DIR__ . '/../../includes/session.php';
 require_once __DIR__ . '/../../src/Database.php';
 require_once __DIR__ . '/../../src/Movie.php';
 
@@ -160,266 +160,160 @@ function uploadFile($file, $folder, array $allowedExt, $maxMB) {
 
     return ['path' => $webDir . '/' . $newName, 'error' => ''];
 }
+
+$page_title = 'Edit Movie — Creator Panel';
+$active_nav = 'creator';
+$container_class = 'app-container--narrow';
+require __DIR__ . '/../../includes/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Edit Movie – Creator Panel</title>
-    <style>
-        * { box-sizing: border-box; }
-        body      { font-family: Arial, sans-serif; margin: 0; background: #f4f4f4; }
-        header    { background: #1a1a2e; color: #fff; padding: 16px 24px;
-                    display: flex; justify-content: space-between; align-items: center; }
-        header a  { color: #e0b0ff; text-decoration: none; margin-left: 16px; }
 
-        .container { max-width: 780px; margin: 36px auto; padding: 0 20px 60px; }
-        h2         { color: #1a1a2e; margin-bottom: 6px; }
-        .subtitle  { color: #666; font-size: 14px; margin-bottom: 28px; }
+  <div class="page-heading">
+    <h1>Edit Movie</h1>
+    <p>Editing: <strong><?= htmlspecialchars($movie->getTitle()) ?></strong> — changes are saved as a draft until you publish.</p>
+  </div>
 
-        .card      { background: #fff; border-radius: 10px; padding: 28px 32px;
-                     box-shadow: 0 2px 10px rgba(0,0,0,.08); margin-bottom: 24px; }
-        .card h3   { margin: 0 0 20px; font-size: 16px; color: #1a1a2e;
-                     border-bottom: 2px solid #e8e8f0; padding-bottom: 10px; }
-
-        .form-group          { margin-bottom: 18px; }
-        label                { display: block; font-size: 14px; font-weight: bold;
-                               color: #333; margin-bottom: 6px; }
-        label .req           { color: #dc3545; margin-left: 2px; }
-        input[type=text],
-        input[type=number],
-        textarea,
-        input[type=file]     { width: 100%; padding: 10px 12px; border: 1px solid #ccc;
-                               border-radius: 6px; font-size: 14px; font-family: Arial, sans-serif;
-                               transition: border-color .2s; }
-        input:focus,
-        textarea:focus       { outline: none; border-color: #6f42c1; }
-        input.error-field,
-        textarea.error-field { border-color: #dc3545; background: #fff8f8; }
-        textarea             { resize: vertical; }
-
-        .char-count          { text-align: right; font-size: 12px; color: #999; margin-top: 3px; }
-        .char-count.over     { color: #dc3545; }
-
-        .inline-group        { display: flex; gap: 16px; }
-        .inline-group .form-group { flex: 1; }
-
-        .err-label           { display: block; font-size: 12px; color: #dc3545;
-                               margin-top: 4px; min-height: 16px; }
-
-        /* categories */
-        .cat-grid            { display: flex; flex-wrap: wrap; gap: 10px; }
-        .cat-item            { display: flex; align-items: center; gap: 7px;
-                               background: #f0eeff; border-radius: 20px; padding: 6px 14px;
-                               cursor: pointer; border: 2px solid transparent;
-                               transition: border-color .15s, background .15s; font-size: 14px; }
-        .cat-item:has(input:checked) { border-color: #6f42c1; background: #e4dbff; }
-        .cat-item input      { width: 15px; height: 15px; accent-color: #6f42c1; cursor: pointer; }
-
-        /* existing file display */
-        .existing-file       { display: flex; align-items: center; gap: 12px;
-                               background: #f8f9fa; border: 1px solid #dee2e6;
-                               border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
-        .existing-file img   { width: 70px; height: 46px; object-fit: cover; border-radius: 4px; }
-        .existing-file span  { font-size: 13px; color: #555; }
-        .existing-file .lbl  { font-size: 12px; color: #888; display: block; }
-
-        /* file preview after new selection */
-        .file-preview        { margin-top: 10px; display: none; }
-        .file-preview img    { max-width: 160px; max-height: 100px;
-                               border-radius: 6px; border: 1px solid #ddd; }
-        .file-preview .fname { font-size: 13px; color: #555; margin-top: 5px; }
-
-        /* alerts */
-        .alert-errors        { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;
-                               border-radius: 8px; padding: 14px 18px; margin-bottom: 24px; }
-        .alert-errors ul     { margin: 8px 0 0 0; padding-left: 20px; }
-        .alert-errors li     { margin-bottom: 4px; font-size: 14px; }
-
-        /* buttons */
-        .btn-row             { display: flex; gap: 12px; margin-top: 8px; }
-        .btn                 { padding: 11px 26px; border-radius: 6px; font-size: 15px;
-                               cursor: pointer; border: none; font-family: Arial, sans-serif; }
-        .btn-save            { background: #6f42c1; color: #fff; }
-        .btn-save:hover      { background: #5a32a3; }
-        .btn-save:disabled   { background: #b39ddb; cursor: not-allowed; }
-        .btn-cancel          { background: #e9ecef; color: #333; text-decoration: none;
-                               display: inline-flex; align-items: center; }
-        .btn-cancel:hover    { background: #dee2e6; }
-    </style>
-</head>
-<body>
-
-<header>
-    <span>🎬 Creator Panel</span>
-    <div>
-        <a href="movies.php">My Movies</a>
-        <a href="add_movie.php">+ Add Movie</a>
-        <a href="/index.php">Home</a>
-        <a href="/auth/logout.php">Logout (<?php echo htmlspecialchars($_SESSION['username'] ?? 'creator'); ?>)</a>
+  <?php if (!empty($errors)): ?>
+    <div class="alert-errors">
+      <strong>Please fix the following:</strong>
+      <ul>
+        <?php foreach ($errors as $e): ?>
+          <li><?= htmlspecialchars($e) ?></li>
+        <?php endforeach; ?>
+      </ul>
     </div>
-</header>
+  <?php endif; ?>
 
-<div class="container">
-    <h2>Edit Movie</h2>
-    <p class="subtitle">
-        Editing: <strong><?php echo htmlspecialchars($movie->getTitle()); ?></strong>
-        &nbsp;—&nbsp; Changes are saved as a draft until you publish.
-    </p>
+  <form method="post" enctype="multipart/form-data" id="editMovieForm" novalidate>
 
-    <?php if (!empty($errors)): ?>
-        <div class="alert-errors">
-            <strong>Please fix the following:</strong>
-            <ul>
-                <?php foreach ($errors as $e): ?>
-                    <li><?php echo htmlspecialchars($e); ?></li>
-                <?php endforeach; ?>
-            </ul>
+    <!-- basic info -->
+    <div class="glass-panel form-card">
+      <h3>Basic Information</h3>
+
+      <div class="form-group">
+        <label for="title">Title <span class="req">*</span></label>
+        <input type="text" id="title" name="title" class="form-control" maxlength="255"
+               value="<?= htmlspecialchars($formData['title']) ?>"
+               onblur="validateRequired(this, 'titleErr', 'Title is required')"
+               onkeyup="handleKeyUp()">
+        <span class="err-label" id="titleErr"></span>
+      </div>
+
+      <div class="form-group">
+        <label for="short_description">
+          Short Description <span class="req">*</span>
+          <small style="font-weight:normal;color:var(--ink-faint)">(shown on home page, max 500 chars)</small>
+        </label>
+        <textarea id="short_description" name="short_description" class="form-control" rows="3" maxlength="500"
+                  onblur="validateRequired(this, 'shortDescErr', 'Short description is required')"
+                  onkeyup="updateCharCount('short_description', 'shortDescCount', 500); handleKeyUp()"
+                  ><?= htmlspecialchars($formData['short_description']) ?></textarea>
+        <div class="char-count" id="shortDescCount">0 / 500</div>
+        <span class="err-label" id="shortDescErr"></span>
+      </div>
+
+      <div class="form-group">
+        <label for="synopsis">
+          Synopsis
+          <small style="font-weight:normal;color:var(--ink-faint)">(full description on movie page)</small>
+        </label>
+        <textarea id="synopsis" name="synopsis" class="form-control" rows="5"><?= htmlspecialchars($formData['synopsis']) ?></textarea>
+      </div>
+
+      <div class="inline-group">
+        <div class="form-group">
+          <label for="release_year">Release Year</label>
+          <input type="number" id="release_year" name="release_year" class="form-control"
+                 min="1888" max="2100" placeholder="e.g. 2023"
+                 value="<?= htmlspecialchars($formData['release_year']) ?>"
+                 onblur="validateYear()" onkeyup="handleKeyUp()">
+          <span class="err-label" id="yearErr"></span>
         </div>
-    <?php endif; ?>
-
-    <form method="post" enctype="multipart/form-data" id="editMovieForm" novalidate>
-
-        <!-- basic info -->
-        <div class="card">
-            <h3>Basic Information</h3>
-
-            <div class="form-group">
-                <label for="title">Title <span class="req">*</span></label>
-                <input type="text" id="title" name="title" maxlength="255"
-                       value="<?php echo htmlspecialchars($formData['title']); ?>"
-                       onblur="validateRequired(this, 'titleErr', 'Title is required')"
-                       onkeyup="handleKeyUp()">
-                <span class="err-label" id="titleErr"></span>
-            </div>
-
-            <div class="form-group">
-                <label for="short_description">
-                    Short Description <span class="req">*</span>
-                    <small style="font-weight:normal;color:#888">(shown on home page, max 500 chars)</small>
-                </label>
-                <textarea id="short_description" name="short_description"
-                          rows="3" maxlength="500"
-                          onblur="validateRequired(this, 'shortDescErr', 'Short description is required')"
-                          onkeyup="updateCharCount('short_description', 'shortDescCount', 500); handleKeyUp()"
-                          ><?php echo htmlspecialchars($formData['short_description']); ?></textarea>
-                <div class="char-count" id="shortDescCount">0 / 500</div>
-                <span class="err-label" id="shortDescErr"></span>
-            </div>
-
-            <div class="form-group">
-                <label for="synopsis">
-                    Synopsis
-                    <small style="font-weight:normal;color:#888">(full description on movie page)</small>
-                </label>
-                <textarea id="synopsis" name="synopsis"
-                          rows="5"><?php echo htmlspecialchars($formData['synopsis']); ?></textarea>
-            </div>
-
-            <div class="inline-group">
-                <div class="form-group">
-                    <label for="release_year">Release Year</label>
-                    <input type="number" id="release_year" name="release_year"
-                           min="1888" max="2100" placeholder="e.g. 2023"
-                           value="<?php echo htmlspecialchars($formData['release_year']); ?>"
-                           onblur="validateYear()"
-                           onkeyup="handleKeyUp()">
-                    <span class="err-label" id="yearErr"></span>
-                </div>
-                <div class="form-group">
-                    <label for="duration_min">Duration (minutes)</label>
-                    <input type="number" id="duration_min" name="duration_min"
-                           min="1" max="999" placeholder="e.g. 120"
-                           value="<?php echo htmlspecialchars($formData['duration_min']); ?>"
-                           onblur="validateDuration()"
-                           onkeyup="handleKeyUp()">
-                    <span class="err-label" id="durationErr"></span>
-                </div>
-            </div>
+        <div class="form-group">
+          <label for="duration_min">Duration (minutes)</label>
+          <input type="number" id="duration_min" name="duration_min" class="form-control"
+                 min="1" max="999" placeholder="e.g. 120"
+                 value="<?= htmlspecialchars($formData['duration_min']) ?>"
+                 onblur="validateDuration()" onkeyup="handleKeyUp()">
+          <span class="err-label" id="durationErr"></span>
         </div>
+      </div>
+    </div>
 
-        <!-- categories -->
-        <div class="card">
-            <h3>Categories</h3>
-            <div class="cat-grid">
-                <?php foreach ($categories as $id => $name): ?>
-                    <label class="cat-item">
-                        <input type="checkbox" name="categories[]" value="<?php echo $id; ?>"
-                            <?php echo in_array($id, $formData['selected_cats']) ? 'checked' : ''; ?>>
-                        <?php echo htmlspecialchars($name); ?>
-                    </label>
-                <?php endforeach; ?>
+    <!-- categories -->
+    <div class="glass-panel form-card">
+      <h3>Categories</h3>
+      <div class="cat-grid">
+        <?php foreach ($categories as $id => $name): ?>
+          <label class="cat-item">
+            <input type="checkbox" name="categories[]" value="<?= $id ?>"
+              <?= in_array($id, $formData['selected_cats']) ? 'checked' : '' ?>>
+            <?= htmlspecialchars($name) ?>
+          </label>
+        <?php endforeach; ?>
+      </div>
+    </div>
+
+    <!-- media -->
+    <div class="glass-panel form-card">
+      <h3>Media</h3>
+
+      <div class="form-group">
+        <label for="image">
+          Poster Image
+          <small style="font-weight:normal;color:var(--ink-faint)">(leave blank to keep existing)</small>
+        </label>
+
+        <?php if ($current_image): ?>
+          <div class="existing-file">
+            <img src="/<?= htmlspecialchars($current_image) ?>" alt="current poster" onerror="this.style.visibility='hidden'">
+            <div>
+              <span class="lbl">Current poster</span>
+              <span><?= htmlspecialchars(basename($current_image)) ?></span>
             </div>
+          </div>
+        <?php endif; ?>
+
+        <input type="file" id="image" name="image" class="form-control"
+               accept=".jpg,.jpeg,.png,.webp" onchange="previewImage(this)">
+        <span class="err-label" id="imageErr"></span>
+        <div class="file-preview" id="imagePreview">
+          <img id="imageThumb" src="" alt="new preview">
+          <div class="fname" id="imageName"></div>
         </div>
+      </div>
 
-        <!-- media -->
-        <div class="card">
-            <h3>Media</h3>
+      <div class="form-group">
+        <label for="media">
+          Trailer / Video / Audio
+          <small style="font-weight:normal;color:var(--ink-faint)">(leave blank to keep existing)</small>
+        </label>
 
-            <div class="form-group">
-                <label for="image">
-                    Poster Image
-                    <small style="font-weight:normal;color:#888">(leave blank to keep existing)</small>
-                </label>
-
-                <!-- show existing poster -->
-                <?php if ($current_image): ?>
-                    <div class="existing-file">
-                        <img src="/<?php echo htmlspecialchars($current_image); ?>" alt="current poster">
-                        <div>
-                            <span class="lbl">Current poster</span>
-                            <span><?php echo htmlspecialchars(basename($current_image)); ?></span>
-                        </div>
-                    </div>
-                <?php endif; ?>
-
-                <input type="file" id="image" name="image"
-                       accept=".jpg,.jpeg,.png,.webp"
-                       onchange="previewImage(this)">
-                <span class="err-label" id="imageErr"></span>
-                <div class="file-preview" id="imagePreview">
-                    <img id="imageThumb" src="" alt="new preview">
-                    <div class="fname" id="imageName"></div>
-                </div>
+        <?php if ($current_media): ?>
+          <div class="existing-file">
+            <span>📎</span>
+            <div>
+              <span class="lbl">Current media file</span>
+              <span><?= htmlspecialchars(basename($current_media)) ?></span>
             </div>
+          </div>
+        <?php endif; ?>
 
-            <div class="form-group">
-                <label for="media">
-                    Trailer / Video / Audio
-                    <small style="font-weight:normal;color:#888">(leave blank to keep existing)</small>
-                </label>
-
-                <!-- show existing media filename if set -->
-                <?php if ($current_media): ?>
-                    <div class="existing-file">
-                        <span>📎</span>
-                        <div>
-                            <span class="lbl">Current media file</span>
-                            <span><?php echo htmlspecialchars(basename($current_media)); ?></span>
-                        </div>
-                    </div>
-                <?php endif; ?>
-
-                <input type="file" id="media" name="media"
-                       accept=".mp4,.mp3,.mov,.avi"
-                       onchange="showMediaName(this)">
-                <span class="err-label" id="mediaErr"></span>
-                <div class="file-preview" id="mediaPreview">
-                    <div class="fname" id="mediaName"></div>
-                </div>
-            </div>
+        <input type="file" id="media" name="media" class="form-control"
+               accept=".mp4,.mp3,.mov,.avi" onchange="showMediaName(this)">
+        <span class="err-label" id="mediaErr"></span>
+        <div class="file-preview" id="mediaPreview">
+          <div class="fname" id="mediaName"></div>
         </div>
+      </div>
+    </div>
 
-        <!-- buttons -->
-        <div class="btn-row">
-            <button type="submit" class="btn btn-save" id="btnSubmit">
-                Save Changes
-            </button>
-            <a href="movies.php" class="btn btn-cancel">Cancel</a>
-        </div>
+    <!-- buttons -->
+    <div style="display:flex;gap:12px;margin-top:8px">
+      <button type="submit" class="glass-btn glass-btn--accent" id="btnSubmit">Save Changes</button>
+      <a href="/creator/movies.php" class="glass-btn">Cancel</a>
+    </div>
 
-    </form>
-</div>
+  </form>
 
 <script>
 // validation helpers
@@ -517,7 +411,7 @@ function checkTitleAjax() {
     const titleField = document.getElementById('title');
     const err        = document.getElementById('titleErr');
     const title      = titleField.value.trim();
-    const exclude    = <?php echo $movie_id; ?>;
+    const exclude    = <?= $movie_id ?>;
 
     if (title === '') return;
 
@@ -553,5 +447,4 @@ window.onload = function() {
 };
 </script>
 
-</body>
-</html>
+<?php require __DIR__ . '/../../includes/footer.php'; ?>
