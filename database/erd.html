@@ -108,7 +108,7 @@ erDiagram
         varchar username UK
         varchar email UK
         varbinary password_hash "bcrypt/argon hash"
-        enum role "viewer | creator | admin"
+        enum role "creator | admin"
         tinyint is_active
         timestamp created_at
     }

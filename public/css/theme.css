@@ -50,9 +50,16 @@ body {
   min-height: 100%;
 }
 
+/* Base colour lives on <html> so it paints the canvas behind the fixed
+   .app-bg ambient. body stays transparent — a solid body background would
+   cover the z-index:-2 ambient over the content area (ambient would then only
+   show below the body box, as on the movie detail page). */
+html {
+  background: var(--bg-base);
+}
 body {
   margin: 0;
-  background: var(--bg-base);
+  background: transparent;
   color: var(--ink);
   font-family: "DM Sans", system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;

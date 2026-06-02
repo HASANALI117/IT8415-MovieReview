@@ -10,7 +10,7 @@ CREATE TABLE dbProj_users (
     username       VARCHAR(50)     NOT NULL,
     email          VARCHAR(255)    NOT NULL,
     password_hash  VARBINARY(255)  NOT NULL,
-    role           ENUM('viewer','creator','admin') NOT NULL DEFAULT 'viewer',
+    role           ENUM('creator','admin') NOT NULL DEFAULT 'creator',
     is_active      TINYINT(1)      NOT NULL DEFAULT 1,
     created_at     TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
 

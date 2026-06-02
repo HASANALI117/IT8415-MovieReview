@@ -75,7 +75,7 @@ if (isset($_POST['submitted'])) {
     <div class="form-group">
       <label for="role">Role</label>
       <select id="role" name="role" class="form-select">
-        <?php foreach (['viewer', 'creator', 'admin'] as $r): ?>
+        <?php foreach (['creator', 'admin'] as $r): ?>
           <option value="<?= $r ?>" <?= $user->role === $r ? 'selected' : '' ?>><?= ucfirst($r) ?></option>
         <?php endforeach; ?>
       </select>
