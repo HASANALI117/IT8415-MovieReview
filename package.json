@@ -1,0 +1,10 @@
+{
+  "name": "movie-review-ultrablur",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "ultrablur.js dependency for seed.php (M3). Run: npm install, then php seed.php",
+  "dependencies": {
+    "sharp": "^0.33.0"
+  }
+}
