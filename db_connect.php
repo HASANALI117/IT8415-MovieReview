@@ -17,4 +17,17 @@ if ($conn->connect_error) {
 } else {
     $conn->set_charset(DB_CHARSET);
 }
+
+class Database {
+    private $connection;
+
+    public function __construct() {
+        global $conn; // Access the global $conn variable
+        $this->connection = $conn;
+    }
+
+    public function getConnection() {
+        return $this->connection;
+    }
+}
 ?>

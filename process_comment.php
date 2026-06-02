@@ -2,10 +2,15 @@
 session_start();
 require_once 'db_connect.php';
 
+if (!isset($_SESSION['UserId'])) {
+    echo json_encode(['status' => 'error', 'message' => 'Unauthorized']);
+    exit;
+}
+
 $movie_id = (int)$_POST['movie_id'];
 $comment = $_POST['comment'];
 $rating = (int)$_POST['rating'];
-$user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 1; // Default to user 1 for demo
+$user_id = $_SESSION['UserId'];
 
 // 1. Rate movie via Stored Procedure 
 $stmt_rate = $conn->prepare("CALL p_rate_movie(?, ?, ?)");

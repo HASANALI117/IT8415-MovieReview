@@ -30,7 +30,7 @@ $director_name = $director_res ? $director_res['full_name'] : "Unknown";
 $stmt_dir->close();
 
 // Check if user is admin
-$is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
+$is_admin = isset($_SESSION['Role']) && $_SESSION['Role'] === 'admin';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -54,9 +54,20 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
         .comment-item { padding: 10px; border-bottom: 1px solid #f9f9f9; position: relative; }
         .delete-btn { position: absolute; right: 10px; top: 10px; color: red; cursor: pointer; }
         .ui-tooltip { font-size: 12px; }
+        .user-nav { position: absolute; top: 20px; right: 40px; color: white; z-index: 10; }
+        .user-nav a { color: white; text-decoration: none; font-weight: bold; margin-left: 15px; }
     </style>
 </head>
 <body>
+
+<div class="user-nav">
+    <?php if (isset($_SESSION['UserId'])): ?>
+        Welcome, <strong><?php echo htmlspecialchars($_SESSION['Username']); ?></strong>
+        <a href="logout.php">Logout</a>
+    <?php else: ?>
+        <a href="login.php">Login to Review</a>
+    <?php endif; ?>
+</div>
 
 <div class="hero-banner">
     <div class="hero-overlay">
@@ -74,6 +85,7 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
         <p><strong>Director:</strong> <?php echo $director_name; ?></p>
         <p style="line-height: 1.6; color: #444;"><?php echo $movie['synopsis']; ?></p>
 
+        <?php if (isset($_SESSION['UserId'])): ?>
         <div class="rating-section">
             <h3>Rate this Movie</h3>
             <div id="stars" class="star-rating" title="Click to rate">
@@ -85,16 +97,21 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
             </div>
             <input type="hidden" id="selected-rating" value="0">
         </div>
+        <?php else: ?>
+            <p><em>Please <a href="login.php" style="color:#007bff">login</a> to rate this movie.</em></p>
+        <?php endif; ?>
     </div>
 </div>
 
 <div class="comment-box" style="width: 80%; margin: 0 auto;">
     <h3>User Comments</h3>
+    <?php if (isset($_SESSION['UserId'])): ?>
     <form id="comment-form">
         <input type="hidden" name="movie_id" value="<?php echo $movie_id; ?>">
         <textarea name="comment" id="comment-text" style="width: 100%; height: 80px;" placeholder="Add a comment..."></textarea><br>
         <button type="submit" id="submit-comment">Post Comment</button>
     </form>
+    <?php endif; ?>
 
     <div id="comments-list">
         <!-- Comments loaded via AJAX or PHP Loop -->
