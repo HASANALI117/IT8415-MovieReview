@@ -98,10 +98,8 @@ erDiagram
     dbProj_movies ||--o{ dbProj_ratings          : "receives"
     dbProj_movies ||--o{ dbProj_comments         : "has"
     dbProj_movies ||--o{ dbProj_movie_categories : "tagged in"
-    dbProj_movies ||--o{ dbProj_movie_cast       : "features"
 
     dbProj_categories ||--o{ dbProj_movie_categories : "groups"
-    dbProj_persons    ||--o{ dbProj_movie_cast       : "credited in"
 
     dbProj_users {
         int user_id PK
@@ -118,13 +116,6 @@ erDiagram
         varchar name UK
     }
 
-    dbProj_persons {
-        int person_id PK
-        varchar full_name
-        smallint birth_year
-        text bio
-    }
-
     dbProj_movies {
         int movie_id PK
         varchar title "FULLTEXT"
@@ -133,9 +124,8 @@ erDiagram
         text synopsis "FULLTEXT"
         smallint release_year
         int duration_min
+        varchar director
         varchar image_url
-        varchar media_url
-        varchar download_url
         varchar fanart_bg "cinematic backdrop"
         varchar fanart_logo "title logo"
         char color_tl "gradient hex"
@@ -155,14 +145,6 @@ erDiagram
     dbProj_movie_categories {
         int movie_id PK, FK
         int category_id PK, FK
-    }
-
-    dbProj_movie_cast {
-        int movie_id PK, FK
-        int person_id PK, FK
-        enum role PK "director | actor | writer | producer"
-        varchar character_name
-        int credit_order
     }
 
     dbProj_ratings {

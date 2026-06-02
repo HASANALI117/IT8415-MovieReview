@@ -31,19 +31,6 @@ CREATE TABLE dbProj_categories (
 
 
 
-CREATE TABLE dbProj_persons (
-    person_id   INT          NOT NULL AUTO_INCREMENT,
-    full_name   VARCHAR(255) NOT NULL,
-    birth_year  SMALLINT     NULL,
-    bio         TEXT         NULL,
-
-    CONSTRAINT pk_persons PRIMARY KEY (person_id)
-) ENGINE=InnoDB;
-
-CREATE INDEX idx_persons_name ON dbProj_persons (full_name);
-
-
-
 CREATE TABLE dbProj_movies (
     movie_id          INT             NOT NULL AUTO_INCREMENT,
     title             VARCHAR(255)    NOT NULL,
@@ -52,9 +39,8 @@ CREATE TABLE dbProj_movies (
     synopsis          TEXT            NULL,                     -- full "View More" text
     release_year      SMALLINT        NULL,
     duration_min      INT             NULL,
-    image_url         VARCHAR(500)    NOT NULL,                 -- >=1 image 
-    media_url         VARCHAR(500)    NULL,                     -- trailer audio/video
-    download_url      VARCHAR(500)    NULL,                     -- optional download
+    director          VARCHAR(255)    NULL,                     -- director name (flat, no cast table)
+    image_url         VARCHAR(500)    NOT NULL,                 -- >=1 image
     fanart_bg         VARCHAR(500)    NULL,                     -- cinematic backdrop
     fanart_logo       VARCHAR(500)    NULL,                     -- transparent title logo
     color_tl          CHAR(6)         NULL,                     -- gradient hex: top-left
@@ -102,27 +88,6 @@ CREATE TABLE dbProj_movie_categories (
         FOREIGN KEY (category_id) REFERENCES dbProj_categories (category_id)
         ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB;
-
-
-
-CREATE TABLE dbProj_movie_cast (
-    movie_id        INT NOT NULL,
-    person_id       INT NOT NULL,
-    role            ENUM('director','actor','writer','producer') NOT NULL,
-    character_name  VARCHAR(255) NULL,
-    credit_order    INT          NULL,
-
-    CONSTRAINT pk_movie_cast PRIMARY KEY (movie_id, person_id, role),
-    CONSTRAINT fk_mc_movie
-        FOREIGN KEY (movie_id) REFERENCES dbProj_movies (movie_id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_mc_person
-        FOREIGN KEY (person_id) REFERENCES dbProj_persons (person_id)
-        ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB;
-
-CREATE INDEX idx_mc_person ON dbProj_movie_cast (person_id);
-CREATE INDEX idx_mc_role   ON dbProj_movie_cast (role);
 
 
 

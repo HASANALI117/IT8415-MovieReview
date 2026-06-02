@@ -11,8 +11,7 @@ class Movie {
     private $release_year;
     private $duration_min;
     private $image_url;
-    private $media_url;
-    private $download_url;
+    private $director;
     private $created_by;
     private $is_published;
 
@@ -24,8 +23,7 @@ class Movie {
     public function getReleaseYear()     { return $this->release_year; }
     public function getDurationMin()     { return $this->duration_min; }
     public function getImageUrl()        { return $this->image_url; }
-    public function getMediaUrl()        { return $this->media_url; }
-    public function getDownloadUrl()     { return $this->download_url; }
+    public function getDirector()        { return $this->director; }
     public function getCreatedBy()       { return $this->created_by; }
     public function getIsPublished()     { return $this->is_published; }
 
@@ -35,8 +33,7 @@ class Movie {
     public function setReleaseYear($v)   { $this->release_year      = (int)$v; }
     public function setDurationMin($v)   { $this->duration_min      = (int)$v; }
     public function setImageUrl($v)      { $this->image_url         = $v; }
-    public function setMediaUrl($v)      { $this->media_url         = $v; }
-    public function setDownloadUrl($v)   { $this->download_url      = $v; }
+    public function setDirector($v)      { $this->director          = trim($v); }
     public function setCreatedBy($v)     { $this->created_by        = (int)$v; }
     public function setIsPublished($v)   { $this->is_published      = (int)$v; }
 
@@ -61,20 +58,19 @@ class Movie {
         $stmt = $conn->prepare(
             "INSERT INTO dbProj_movies
                 (title, short_description, synopsis, release_year,
-                 duration_min, image_url, media_url, download_url, created_by)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                 duration_min, director, image_url, created_by)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
         );
 
         $stmt->bind_param(
-            "sssiisssi",
+            "sssiissi",
             $this->title,
             $this->short_description,
             $this->synopsis,
             $this->release_year,
             $this->duration_min,
+            $this->director,
             $this->image_url,
-            $this->media_url,
-            $this->download_url,
             $this->created_by
         );
 
@@ -96,8 +92,8 @@ class Movie {
 
         $stmt = $conn->prepare(
             "SELECT movie_id, title, short_description, synopsis,
-                    release_year, duration_min, image_url, media_url,
-                    download_url, created_by, is_published
+                    release_year, duration_min, director, image_url,
+                    created_by, is_published
                FROM dbProj_movies
               WHERE movie_id = ?"
         );
@@ -106,7 +102,7 @@ class Movie {
         $stmt->bind_result(
             $this->movie_id, $this->title, $this->short_description,
             $this->synopsis, $this->release_year, $this->duration_min,
-            $this->image_url, $this->media_url, $this->download_url,
+            $this->director, $this->image_url,
             $this->created_by, $this->is_published
         );
 
@@ -127,24 +123,22 @@ class Movie {
                     synopsis          = ?,
                     release_year      = ?,
                     duration_min      = ?,
-                    image_url         = ?,
-                    media_url         = ?,
-                    download_url      = ?
+                    director          = ?,
+                    image_url         = ?
               WHERE movie_id    = ?
                 AND created_by  = ?
                 AND is_published = 0"
         );
 
         $stmt->bind_param(
-            "sssiiissii",
+            "sssiissii",
             $this->title,
             $this->short_description,
             $this->synopsis,
             $this->release_year,
             $this->duration_min,
+            $this->director,
             $this->image_url,
-            $this->media_url,
-            $this->download_url,
             $this->movie_id,
             $this->created_by
         );
