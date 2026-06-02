@@ -1,0 +1,153 @@
+DROP DATABASE IF EXISTS movie_review;
+CREATE DATABASE movie_review
+    CHARACTER SET utf8mb4
+    COLLATE utf8mb4_unicode_ci;
+USE movie_review;
+
+
+CREATE TABLE dbProj_users (
+    user_id        INT             NOT NULL AUTO_INCREMENT,
+    username       VARCHAR(50)     NOT NULL,
+    email          VARCHAR(255)    NOT NULL,
+    password_hash  VARBINARY(255)  NOT NULL,
+    role           ENUM('creator','admin') NOT NULL DEFAULT 'creator',
+    is_active      TINYINT(1)      NOT NULL DEFAULT 1,
+    created_at     TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT pk_users          PRIMARY KEY (user_id),
+    CONSTRAINT uq_users_username UNIQUE (username),
+    CONSTRAINT uq_users_email    UNIQUE (email)
+) ENGINE=InnoDB;
+
+
+
+CREATE TABLE dbProj_categories (
+    category_id  INT          NOT NULL AUTO_INCREMENT,
+    name         VARCHAR(50)  NOT NULL,
+
+    CONSTRAINT pk_categories      PRIMARY KEY (category_id),
+    CONSTRAINT uq_categories_name UNIQUE (name)
+) ENGINE=InnoDB;
+
+
+
+CREATE TABLE dbProj_movies (
+    movie_id          INT             NOT NULL AUTO_INCREMENT,
+    title             VARCHAR(255)    NOT NULL,
+    tmdb_id           INT             NULL,                     -- external TMDB id
+    short_description VARCHAR(500)    NULL,                     -- home-page blurb
+    synopsis          TEXT            NULL,                     -- full "View More" text
+    release_year      SMALLINT        NULL,
+    duration_min      INT             NULL,
+    director          VARCHAR(255)    NULL,                     -- director name (flat, no cast table)
+    image_url         VARCHAR(500)    NOT NULL,                 -- >=1 image
+    fanart_bg         VARCHAR(500)    NULL,                     -- cinematic backdrop
+    fanart_logo       VARCHAR(500)    NULL,                     -- transparent title logo
+    color_tl          CHAR(6)         NULL,                     -- gradient hex: top-left
+    color_tr          CHAR(6)         NULL,                     -- gradient hex: top-right
+    color_br          CHAR(6)         NULL,                     -- gradient hex: bottom-right
+    color_bl          CHAR(6)         NULL,                     -- gradient hex: bottom-left
+    created_by        INT             NULL,                     -- owning creator
+    is_published      TINYINT(1)      NOT NULL DEFAULT 0,       -- publish workflow
+    published_at      TIMESTAMP       NULL,
+    view_count        INT             NOT NULL DEFAULT 0,       -- popularity metric
+    avg_rating        DECIMAL(4,2)    NOT NULL DEFAULT 0.00,    -- maintained by trigger (0-10)
+    rating_count      INT             NOT NULL DEFAULT 0,       -- maintained by trigger
+    created_at        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                               ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT pk_movies PRIMARY KEY (movie_id),
+    CONSTRAINT fk_movies_creator
+        FOREIGN KEY (created_by) REFERENCES dbProj_users (user_id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT chk_movies_year
+        CHECK (release_year IS NULL OR release_year BETWEEN 1888 AND 2100)
+) ENGINE=InnoDB;
+
+-- Search
+
+CREATE FULLTEXT INDEX ft_movies_text
+    ON dbProj_movies (title, short_description, synopsis);
+CREATE INDEX idx_movies_published ON dbProj_movies (is_published, published_at);
+CREATE INDEX idx_movies_creator   ON dbProj_movies (created_by);
+CREATE INDEX idx_movies_views     ON dbProj_movies (view_count);
+CREATE INDEX idx_movies_rating    ON dbProj_movies (avg_rating);
+CREATE INDEX idx_movies_year      ON dbProj_movies (release_year);
+
+
+CREATE TABLE dbProj_movie_categories (
+    movie_id    INT NOT NULL,
+    category_id INT NOT NULL,
+
+    CONSTRAINT pk_movie_categories PRIMARY KEY (movie_id, category_id),
+    CONSTRAINT fk_mcat_movie
+        FOREIGN KEY (movie_id) REFERENCES dbProj_movies (movie_id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_mcat_category
+        FOREIGN KEY (category_id) REFERENCES dbProj_categories (category_id)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB;
+
+
+
+CREATE TABLE dbProj_ratings (
+    rating_id   INT       NOT NULL AUTO_INCREMENT,
+    movie_id    INT       NOT NULL,
+    user_id     INT       NOT NULL,
+    stars       TINYINT   NOT NULL,
+    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                   ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT pk_ratings PRIMARY KEY (rating_id),
+    CONSTRAINT fk_ratings_movie
+        FOREIGN KEY (movie_id) REFERENCES dbProj_movies (movie_id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_ratings_user
+        FOREIGN KEY (user_id) REFERENCES dbProj_users (user_id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT uq_ratings_user_movie UNIQUE (movie_id, user_id),
+    CONSTRAINT chk_ratings_stars CHECK (stars BETWEEN 1 AND 10)
+) ENGINE=InnoDB;
+
+CREATE INDEX idx_ratings_movie ON dbProj_ratings (movie_id);
+
+
+
+CREATE TABLE dbProj_comments (
+    comment_id  INT          NOT NULL AUTO_INCREMENT,
+    movie_id    INT          NOT NULL,
+    user_id     INT          NOT NULL,
+    body        TEXT         NOT NULL,
+    is_removed  TINYINT(1)   NOT NULL DEFAULT 0,   -- admin moderation
+    removed_by  INT          NULL,                 -- which admin removed it
+    removed_at  TIMESTAMP    NULL,
+    created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT pk_comments PRIMARY KEY (comment_id),
+    CONSTRAINT fk_comments_movie
+        FOREIGN KEY (movie_id) REFERENCES dbProj_movies (movie_id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_comments_user
+        FOREIGN KEY (user_id) REFERENCES dbProj_users (user_id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_comments_remover
+        FOREIGN KEY (removed_by) REFERENCES dbProj_users (user_id)
+        ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB;
+
+CREATE INDEX idx_comments_movie ON dbProj_comments (movie_id);
+
+
+
+CREATE TABLE dbProj_audit_log (
+    log_id      BIGINT       NOT NULL AUTO_INCREMENT,
+    table_name  VARCHAR(64)  NOT NULL,
+    action      ENUM('INSERT','UPDATE','DELETE') NOT NULL,
+    record_id   INT          NULL,
+    detail      VARCHAR(255) NULL,
+    changed_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT pk_audit_log PRIMARY KEY (log_id)
+) ENGINE=InnoDB;

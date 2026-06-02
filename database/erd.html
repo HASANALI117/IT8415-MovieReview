@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Movie Review System &ndash; ERD (IT8415)</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+    :root {
+        --bg: #0f1424;
+        --panel: #161d33;
+        --ink: #e8ecf6;
+        --muted: #9aa6c4;
+        --accent: #5b8cff;
+        --line: #2a3354;
+    }
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        font-family: "Segoe UI", Roboto, Arial, sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+        padding: 32px 24px 64px;
+    }
+    header { max-width: none; margin: 0 0 24px; }
+    h1 { margin: 0 0 4px; font-size: 26px; }
+    .sub { color: var(--muted); font-size: 14px; margin: 0; }
+    .legend {
+        max-width: none;
+        margin: 16px 0 24px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px;
+        font-size: 13px;
+        color: var(--muted);
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 12px 18px;
+    }
+    .legend b { color: var(--ink); }
+    .legend .tag {
+        display: inline-block;
+        font-weight: 700;
+        color: var(--accent);
+        margin-right: 4px;
+    }
+    .diagram-wrap {
+        max-width: none;
+        width: 100%;
+        margin: 0;
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 20px;
+        overflow-x: auto;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+    }
+    .mermaid { font-size: 15px; width: 100%; }
+    .mermaid svg { width: 100% !important; height: auto !important; max-width: none !important; }
+    footer {
+        max-width: none;
+        margin: 24px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.6;
+    }
+    code {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        padding: 1px 6px;
+        color: #cdd7f5;
+    }
+</style>
+</head>
+<body>
+    <header>
+        <h1>Movie Review System &mdash; Entity Relationship Diagram</h1>
+        <p class="sub">IT8415 Database Programming 2 &bull; Group Project &bull; Schema prefix <code>dbProj_</code></p>
+    </header>
+
+    <div class="legend">
+        <span><span class="tag">PK</span><b>Primary Key</b></span>
+        <span><span class="tag">FK</span><b>Foreign Key</b></span>
+        <span><span class="tag">UK</span><b>Unique Key</b></span>
+        <span><b>||&mdash;o{</b> one&nbsp;&rarr;&nbsp;many</span>
+        <span><b>avg_rating / rating_count</b> maintained by triggers</span>
+    </div>
+
+    <div class="diagram-wrap">
+        <pre class="mermaid">
+erDiagram
+    dbProj_users ||--o{ dbProj_movies   : "creates"
+    dbProj_users ||--o{ dbProj_ratings  : "gives"
+    dbProj_users ||--o{ dbProj_comments : "writes"
+    dbProj_users ||--o{ dbProj_comments : "moderates (removed_by)"
+
+    dbProj_movies ||--o{ dbProj_ratings          : "receives"
+    dbProj_movies ||--o{ dbProj_comments         : "has"
+    dbProj_movies ||--o{ dbProj_movie_categories : "tagged in"
+
+    dbProj_categories ||--o{ dbProj_movie_categories : "groups"
+
+    dbProj_users {
+        int user_id PK
+        varchar username UK
+        varchar email UK
+        varbinary password_hash "bcrypt/argon hash"
+        enum role "creator | admin"
+        tinyint is_active
+        timestamp created_at
+    }
+
+    dbProj_categories {
+        int category_id PK
+        varchar name UK
+    }
+
+    dbProj_movies {
+        int movie_id PK
+        varchar title "FULLTEXT"
+        int tmdb_id "external TMDB id"
+        varchar short_description "FULLTEXT, nullable"
+        text synopsis "FULLTEXT"
+        smallint release_year
+        int duration_min
+        varchar director
+        varchar image_url
+        varchar fanart_bg "cinematic backdrop"
+        varchar fanart_logo "title logo"
+        char color_tl "gradient hex"
+        char color_tr "gradient hex"
+        char color_br "gradient hex"
+        char color_bl "gradient hex"
+        int created_by FK "nullable"
+        tinyint is_published
+        timestamp published_at
+        int view_count "popularity"
+        decimal avg_rating "trigger"
+        int rating_count "trigger"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    dbProj_movie_categories {
+        int movie_id PK, FK
+        int category_id PK, FK
+    }
+
+    dbProj_ratings {
+        int rating_id PK
+        int movie_id FK
+        int user_id FK
+        tinyint stars "1..5"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    dbProj_comments {
+        int comment_id PK
+        int movie_id FK
+        int user_id FK
+        text body
+        tinyint is_removed "admin moderation"
+        int removed_by FK
+        timestamp removed_at
+        timestamp created_at
+    }
+
+    dbProj_audit_log {
+        bigint log_id PK
+        varchar table_name
+        enum action "INSERT | UPDATE | DELETE"
+        int record_id
+        varchar detail
+        timestamp changed_at
+    }
+        </pre>
+    </div>
+
+    <footer>
+        <p>
+            <b>Notes:</b>
+            <code>dbProj_audit_log</code> has no foreign keys &mdash; it is an append-only trail written by triggers, so it sits on its own.
+            <code>dbProj_ratings</code> enforces one rating per user per movie via a unique key on (movie_id, user_id).
+            Many-to-many links (movies&ndash;categories, movies&ndash;persons) are resolved through the two junction tables.
+        </p>
+        <p>Open this file in any browser, then screenshot the white panel for the ERD deliverable.</p>
+    </footer>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: "default",
+            er: { useMaxWidth: true, entityPadding: 14 }
+        });
+    </script>
+</body>
+</html>

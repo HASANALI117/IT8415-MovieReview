@@ -1,0 +1,25 @@
+# Seeder holds API keys — never commit (M3 checklist)
+seed.php
+
+# node (ultrablur dep)
+node_modules/
+package-lock.json
+
+# os / editor
+Thumbs.db
+.DS_Store
+*.log
+.vscode/
+
+ultrablur.js
+
+# claude code local tooling
+.claude/
+
+# IDE config
+nbproject/
+
+# Project guidance notes — keep local only, do not publish
+CLAUDE.md
+
+docs/

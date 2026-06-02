@@ -1,0 +1,6 @@
+# public/ is the web root. Default document.
+DirectoryIndex index.php
+
+# NOTE: "Options -Indexes" was removed — the lab UserDir host does not permit the
+# Options directive in .htaccess, which caused an Apache 500. Re-add it locally /
+# on a host where AllowOverride Options is enabled.
