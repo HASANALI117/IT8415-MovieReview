@@ -41,8 +41,8 @@ $movies = Movie::getAllMovies();
 $search = trim($_GET['search'] ?? '');
 if ($search !== '') {
     $movies = array_filter($movies, function($m) use ($search) {
-        return stripos($m['title'], $search) !== false
-            || stripos($m['creator'], $search) !== false;
+        return stripos($m['title'] ?? '', $search) !== false
+            || stripos($m['creator'] ?? '', $search) !== false;
     });
 }
 
