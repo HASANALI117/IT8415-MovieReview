@@ -77,14 +77,12 @@ function nav_pill(string $href, string $label, string $key, string $active): str
   <nav class="app-nav">
     <div class="nav-inner">
 
-      <!-- left: avatar / brand -->
-      <a href="<?= $logged_in ? '/auth/home.php' : '/auth/login.php' ?>" class="nav-avatar" title="<?= $logged_in ? htmlspecialchars($username) : 'Sign in' ?>">
-        <?php if ($logged_in): ?>
+      <!-- left: avatar — only shown for signed-in users -->
+      <?php if ($logged_in): ?>
+        <a href="/auth/home.php" class="nav-avatar" title="<?= htmlspecialchars($username) ?>">
           <?= strtoupper(substr($username ?: 'U', 0, 1)) ?>
-        <?php else: ?>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
-        <?php endif; ?>
-      </a>
+        </a>
+      <?php endif; ?>
 
       <!-- centre: tabs -->
       <ul class="nav-tabs">
