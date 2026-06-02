@@ -1,8 +1,8 @@
 <?php
-// admin_users.php
+// admin/users.php
 // Admin Panel: view and manage all registered users
 
-session_start();
+require_once __DIR__ . '/../../includes/session.php';
 require_once __DIR__ . '/../../src/Database.php';
 
 // access control, admins only
@@ -134,262 +134,112 @@ $totalPages  = max(1, ceil($totalItems / $perPage));
 $currentPage = max(1, min((int)($_GET['page'] ?? 1), $totalPages));
 $offset      = ($currentPage - 1) * $perPage;
 $users       = array_slice(array_values($users), $offset, $perPage);
+
+$page_title = 'User Management — Admin Panel';
+$active_nav = 'admin';
+$admin_tab  = 'users';
+require __DIR__ . '/../../includes/header.php';
+require __DIR__ . '/../../includes/admin_nav.php';
+
+$role_badge = ['admin' => 'badge-pill--danger', 'creator' => '', 'viewer' => 'badge-pill--ok'];
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>User Management – Admin Panel</title>
-    <style>
-        * { box-sizing: border-box; }
-        body       { font-family: Arial, sans-serif; margin: 0; background: #f4f4f4; }
-        header     { background: #1a1a2e; color: #fff; padding: 16px 24px;
-                     display: flex; justify-content: space-between; align-items: center; }
-        header a   { color: #e0b0ff; text-decoration: none; margin-left: 16px; }
 
-        .container { max-width: 1100px; margin: 30px auto; padding: 0 20px 60px; }
-        h2         { color: #1a1a2e; margin-bottom: 4px; }
-        .subtitle  { color: #666; font-size: 14px; margin-bottom: 24px; }
+  <div class="page-heading">
+    <h1>User Management</h1>
+    <p>View, activate, deactivate, and change roles for all users.</p>
+  </div>
 
-        /* message */
-        .msg-success { background: #d4edda; color: #155724; padding: 12px 16px;
-                       border-radius: 6px; margin-bottom: 20px; }
-        .msg-warn    { background: #fff3cd; color: #856404; padding: 12px 16px;
-                       border-radius: 6px; margin-bottom: 20px; }
+  <?php if ($message): ?>
+    <div class="flash flash--<?= str_contains($message, 'cannot') ? 'error' : 'ok' ?>"><?= htmlspecialchars($message) ?></div>
+  <?php endif; ?>
 
-        /* filters */
-        .filters      { display: flex; gap: 12px; align-items: center;
-                        flex-wrap: wrap; margin-bottom: 20px; }
-        .filters input { padding: 9px 12px; border: 1px solid #ccc; border-radius: 6px;
-                         font-size: 14px; width: 260px; }
-        .filters input:focus { outline: none; border-color: #6f42c1; }
-        .filter-btn   { padding: 9px 16px; border-radius: 6px; border: 1px solid #ccc;
-                        background: #fff; font-size: 14px; cursor: pointer;
-                        text-decoration: none; color: #333; }
-        .filter-btn.active { background: #1a1a2e; color: #fff; border-color: #1a1a2e; }
-        .total-count  { margin-left: auto; font-size: 14px; color: #666; }
+  <!-- filters bar -->
+  <form method="get" class="filter-bar" action="/admin/users.php">
+    <input type="text" name="search" class="form-control" placeholder="Search by username or email…"
+           value="<?= htmlspecialchars($search) ?>">
+    <a href="/admin/users.php" class="glass-btn glass-btn--sm <?= $roleFilter === 'all' ? 'glass-btn--accent' : '' ?>">All</a>
+    <a href="/admin/users.php?role=viewer&search=<?= urlencode($search) ?>" class="glass-btn glass-btn--sm <?= $roleFilter === 'viewer' ? 'glass-btn--accent' : '' ?>">Viewers</a>
+    <a href="/admin/users.php?role=creator&search=<?= urlencode($search) ?>" class="glass-btn glass-btn--sm <?= $roleFilter === 'creator' ? 'glass-btn--accent' : '' ?>">Creators</a>
+    <a href="/admin/users.php?role=admin&search=<?= urlencode($search) ?>" class="glass-btn glass-btn--sm <?= $roleFilter === 'admin' ? 'glass-btn--accent' : '' ?>">Admins</a>
+    <button type="submit" class="glass-btn glass-btn--sm glass-btn--accent">Search</button>
+    <span style="margin-left:auto;align-self:center;color:var(--ink-soft);font-size:.85rem">
+      <?= $totalItems ?> user(s) found
+    </span>
+  </form>
 
-        /* table */
-        table      { width: 100%; border-collapse: collapse; background: #fff;
-                     border-radius: 10px; overflow: hidden;
-                     box-shadow: 0 2px 10px rgba(0,0,0,.08); }
-        th         { background: #1a1a2e; color: #fff; padding: 13px 14px;
-                     text-align: left; font-size: 14px; }
-        td         { padding: 12px 14px; border-bottom: 1px solid #eee;
-                     vertical-align: middle; font-size: 14px; }
-        tr:last-child td { border-bottom: none; }
-        tr:hover td      { background: #f9f9ff; }
-        tr.inactive td   { opacity: 0.6; }
+  <?php if (empty($users)): ?>
+    <div class="empty-state"><h3>No users found.</h3></div>
+  <?php else: ?>
+    <div class="glass-table-wrap">
+      <table class="glass-table">
+        <thead>
+          <tr><th>ID</th><th>Username</th><th>Email</th><th>Role</th><th>Status</th><th>Movies</th><th>Joined</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+        <?php foreach ($users as $u):
+            $isSelf = ($u['user_id'] === $_SESSION['user_id']);
+        ?>
+          <tr style="<?= !$u['is_active'] ? 'opacity:.6' : '' ?>">
+            <td><?= $u['user_id'] ?></td>
+            <td>
+              <?= htmlspecialchars($u['username']) ?>
+              <?php if ($isSelf): ?><span class="badge-pill badge-pill--draft">You</span><?php endif; ?>
+            </td>
+            <td><?= htmlspecialchars($u['email']) ?></td>
+            <td><span class="badge-pill <?= $role_badge[$u['role']] ?? '' ?>" <?= ($role_badge[$u['role']] ?? '') === '' ? 'style="background:var(--accent-soft);color:var(--accent-dk)"' : '' ?>><?= ucfirst($u['role']) ?></span></td>
+            <td>
+              <?php if ($u['is_active']): ?>
+                <span class="badge-pill badge-pill--ok">Active</span>
+              <?php else: ?>
+                <span class="badge-pill badge-pill--danger">Inactive</span>
+              <?php endif; ?>
+            </td>
+            <td><?= getMovieCountByUser($u['user_id']) ?></td>
+            <td><?= date('d M Y', strtotime($u['created_at'])) ?></td>
+            <td style="white-space:nowrap">
+              <?php if ($isSelf): ?>
+                <span style="color:var(--ink-faint);font-size:12px">—</span>
+              <?php else: ?>
+                <?php if ($u['is_active']): ?>
+                  <form method="post" style="display:inline">
+                    <input type="hidden" name="user_id" value="<?= $u['user_id'] ?>">
+                    <input type="hidden" name="action" value="deactivate">
+                    <button class="glass-btn glass-btn--sm" onclick="return confirm('Deactivate this user?')">Deactivate</button>
+                  </form>
+                <?php else: ?>
+                  <form method="post" style="display:inline">
+                    <input type="hidden" name="user_id" value="<?= $u['user_id'] ?>">
+                    <input type="hidden" name="action" value="activate">
+                    <button class="glass-btn glass-btn--sm">Activate</button>
+                  </form>
+                <?php endif; ?>
 
-        /* role badge */
-        .badge        { display: inline-block; padding: 3px 10px; border-radius: 12px;
-                        font-size: 12px; font-weight: bold; }
-        .badge-admin  { background: #f3e5f5; color: #7b1fa2; }
-        .badge-creator{ background: #e3f2fd; color: #1565c0; }
-        .badge-viewer { background: #e8f5e9; color: #2e7d32; }
-
-        /* status badge */
-        .badge-active   { background: #d4edda; color: #155724; }
-        .badge-inactive { background: #f8d7da; color: #721c24; }
-
-        /* you badge */
-        .you-tag { background: #fff3cd; color: #856404; font-size: 11px;
-                   padding: 2px 7px; border-radius: 10px; margin-left: 6px; }
-
-        /* action buttons */
-        .btn          { display: inline-block; padding: 6px 12px; border-radius: 5px;
-                        font-size: 12px; cursor: pointer; border: none; margin-right: 4px; }
-        .btn-deact    { background: #fd7e14; color: #fff; }
-        .btn-act      { background: #28a745; color: #fff; }
-
-        /* inline role form */
-        .role-form    { display: inline-flex; gap: 6px; align-items: center; }
-        .role-form select { padding: 5px 8px; border-radius: 5px; border: 1px solid #ccc;
-                            font-size: 12px; }
-        .btn-role     { background: #6f42c1; color: #fff; padding: 5px 10px; }
-
-        .no-results { text-align: center; color: #888; padding: 50px;
-                      font-style: italic; }
-
-        /* pagination */
-        .pagination  { display: flex; gap: 6px; justify-content: center; margin-top: 24px; }
-        .page-btn    { padding: 7px 13px; border-radius: 5px; border: 1px solid #ccc;
-                       background: #fff; cursor: pointer; font-size: 14px;
-                       text-decoration: none; color: #333; }
-        .page-btn.active { background: #1a1a2e; color: #fff; border-color: #1a1a2e; }
-        .page-btn:hover:not(.active) { background: #f0f0f0; }
-    </style>
-</head>
-<body>
-
-<header>
-    <span>🛡️ Admin Panel</span>
-    <div>
-        <a href="movies.php">Content</a>
-        <a href="reports.php">Reports</a>
-        <a href="users.php">Users</a>
-        <a href="comments.php">Comments</a>
-        <a href="/index.php">Home</a>
-        <a href="/auth/logout.php">Logout (<?php echo htmlspecialchars($_SESSION['username']); ?>)</a>
+                <form method="post" style="display:inline-flex;gap:6px;align-items:center">
+                  <input type="hidden" name="user_id" value="<?= $u['user_id'] ?>">
+                  <input type="hidden" name="action" value="set_role">
+                  <select name="new_role" class="glass-select" style="width:auto;padding:.3rem .5rem;font-size:.8rem">
+                    <option value="viewer"  <?= $u['role'] === 'viewer'  ? 'selected' : '' ?>>Viewer</option>
+                    <option value="creator" <?= $u['role'] === 'creator' ? 'selected' : '' ?>>Creator</option>
+                    <option value="admin"   <?= $u['role'] === 'admin'   ? 'selected' : '' ?>>Admin</option>
+                  </select>
+                  <button class="glass-btn glass-btn--sm glass-btn--accent" onclick="return confirm('Change this user\'s role?')">Set</button>
+                </form>
+              <?php endif; ?>
+            </td>
+          </tr>
+        <?php endforeach; ?>
+        </tbody>
+      </table>
     </div>
-</header>
 
-<div class="container">
-    <h2>User Management</h2>
-    <p class="subtitle">View, activate, deactivate, and change roles for all users.</p>
-
-    <?php if ($message): ?>
-        <div class="<?php echo str_contains($message, 'cannot') ? 'msg-warn' : 'msg-success'; ?>">
-            <?php echo htmlspecialchars($message); ?>
-        </div>
+    <?php if ($totalPages > 1): ?>
+      <nav class="pagination-row">
+        <?php for ($p = 1; $p <= $totalPages; $p++): ?>
+          <a href="?page=<?= $p ?><?= $search ? '&search=' . urlencode($search) : '' ?><?= $roleFilter !== 'all' ? '&role=' . $roleFilter : '' ?>"
+             class="page-link-pill <?= $p === $currentPage ? 'active' : '' ?>"><?= $p ?></a>
+        <?php endfor; ?>
+      </nav>
     <?php endif; ?>
+  <?php endif; ?>
 
-    <!-- filters bar -->
-    <form method="get" style="margin:0">
-        <div class="filters">
-            <input type="text" name="search"
-                   placeholder="Search by username or email..."
-                   value="<?php echo htmlspecialchars($search); ?>">
-
-            <a href="users.php"
-               class="filter-btn <?php echo $roleFilter === 'all'     ? 'active' : ''; ?>">
-                All
-            </a>
-            <a href="users.php?role=viewer&search=<?php echo urlencode($search); ?>"
-               class="filter-btn <?php echo $roleFilter === 'viewer'  ? 'active' : ''; ?>">
-                Viewers
-            </a>
-            <a href="users.php?role=creator&search=<?php echo urlencode($search); ?>"
-               class="filter-btn <?php echo $roleFilter === 'creator' ? 'active' : ''; ?>">
-                Creators
-            </a>
-            <a href="users.php?role=admin&search=<?php echo urlencode($search); ?>"
-               class="filter-btn <?php echo $roleFilter === 'admin'   ? 'active' : ''; ?>">
-                Admins
-            </a>
-
-            <button type="submit" class="filter-btn">Search</button>
-
-            <span class="total-count">
-                <?php echo $totalItems; ?> user(s) found
-            </span>
-        </div>
-    </form>
-
-    <?php if (empty($users)): ?>
-        <p class="no-results">No users found.</p>
-    <?php else: ?>
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Username</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th>Movies</th>
-                    <th>Joined</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-            <?php foreach ($users as $u):
-                $isSelf = ($u['user_id'] === $_SESSION['user_id']);
-            ?>
-                <tr class="<?php echo !$u['is_active'] ? 'inactive' : ''; ?>">
-                    <td><?php echo $u['user_id']; ?></td>
-                    <td>
-                        <?php echo htmlspecialchars($u['username']); ?>
-                        <?php if ($isSelf): ?>
-                            <span class="you-tag">You</span>
-                        <?php endif; ?>
-                    </td>
-                    <td><?php echo htmlspecialchars($u['email']); ?></td>
-                    <td>
-                        <span class="badge badge-<?php echo $u['role']; ?>">
-                            <?php echo ucfirst($u['role']); ?>
-                        </span>
-                    </td>
-                    <td>
-                        <?php if ($u['is_active']): ?>
-                            <span class="badge badge-active">Active</span>
-                        <?php else: ?>
-                            <span class="badge badge-inactive">Inactive</span>
-                        <?php endif; ?>
-                    </td>
-                    <td><?php echo getMovieCountByUser($u['user_id']); ?></td>
-                    <td><?php echo date('d M Y', strtotime($u['created_at'])); ?></td>
-                    <td>
-                        <?php if ($isSelf): ?>
-                            <span style="color:#999;font-size:12px">—</span>
-                        <?php else: ?>
-                            <!-- activate / deactivate -->
-                            <?php if ($u['is_active']): ?>
-                                <form method="post" style="display:inline">
-                                    <input type="hidden" name="user_id"
-                                           value="<?php echo $u['user_id']; ?>">
-                                    <input type="hidden" name="action" value="deactivate">
-                                    <button class="btn btn-deact"
-                                            onclick="return confirm('Deactivate this user?')">
-                                        Deactivate
-                                    </button>
-                                </form>
-                            <?php else: ?>
-                                <form method="post" style="display:inline">
-                                    <input type="hidden" name="user_id"
-                                           value="<?php echo $u['user_id']; ?>">
-                                    <input type="hidden" name="action" value="activate">
-                                    <button class="btn btn-act">Activate</button>
-                                </form>
-                            <?php endif; ?>
-
-                            <!-- change role inline -->
-                            <form method="post" class="role-form" style="display:inline-flex">
-                                <input type="hidden" name="user_id"
-                                       value="<?php echo $u['user_id']; ?>">
-                                <input type="hidden" name="action" value="set_role">
-                                <select name="new_role">
-                                    <option value="viewer"
-                                        <?php echo $u['role'] === 'viewer'  ? 'selected' : ''; ?>>
-                                        Viewer
-                                    </option>
-                                    <option value="creator"
-                                        <?php echo $u['role'] === 'creator' ? 'selected' : ''; ?>>
-                                        Creator
-                                    </option>
-                                    <option value="admin"
-                                        <?php echo $u['role'] === 'admin'   ? 'selected' : ''; ?>>
-                                        Admin
-                                    </option>
-                                </select>
-                                <button class="btn btn-role"
-                                        onclick="return confirm('Change this user\'s role?')">
-                                    Set
-                                </button>
-                            </form>
-                        <?php endif; ?>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-            </tbody>
-        </table>
-
-        <!-- pagination -->
-        <?php if ($totalPages > 1): ?>
-            <div class="pagination">
-                <?php for ($p = 1; $p <= $totalPages; $p++): ?>
-                    <a href="?page=<?php echo $p;
-                                         echo $search    ? '&search='  . urlencode($search)    : '';
-                                         echo $roleFilter !== 'all' ? '&role=' . $roleFilter   : ''; ?>"
-                       class="page-btn <?php echo $p === $currentPage ? 'active' : ''; ?>">
-                        <?php echo $p; ?>
-                    </a>
-                <?php endfor; ?>
-            </div>
-        <?php endif; ?>
-
-    <?php endif; ?>
-</div>
-
-</body>
-</html>
+<?php require __DIR__ . '/../../includes/footer.php'; ?>

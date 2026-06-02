@@ -1,42 +1,39 @@
-const FALLBACK = { tl: "b0bec5", tr: "90a4ae", br: "78909c", bl: "607d8b" };
+const FALLBACK = { tl: "23306b", tr: "3b2566", br: "14424f", bl: "2a1d4d" };
 
-// UltraBlur ambient gradient
+// UltraBlur ambient gradient (dark full-page, Plex-style; matches
+// ultrablur_gradient() in includes/header.php — keep stops in sync)
 function buildUltraBlurGradient(tl, tr, br, bl) {
   return `
-    radial-gradient(ellipse 80% 80% at top left,    #${tl}bb 0%, transparent 65%),
-    radial-gradient(ellipse 80% 80% at top right,   #${tr}bb 0%, transparent 65%),
-    radial-gradient(ellipse 80% 80% at bottom right,#${br}bb 0%, transparent 65%),
-    radial-gradient(ellipse 80% 80% at bottom left, #${bl}bb 0%, transparent 65%)
+    radial-gradient(ellipse 130% 130% at 0% 0%,     #${tl} 0%, transparent 78%),
+    radial-gradient(ellipse 130% 130% at 100% 0%,   #${tr} 0%, transparent 78%),
+    radial-gradient(ellipse 130% 130% at 100% 100%, #${br} 0%, transparent 78%),
+    radial-gradient(ellipse 130% 130% at 0% 100%,   #${bl} 0%, transparent 78%)
   `;
 }
 
-(function heroSlider() {
-  const track = document.getElementById("heroTrack");
-  if (!track) return;
-  const slides = Array.from(track.querySelectorAll(".hero-slide"));
+// ===== Plex cinematic hero: cross-fade through featured titles, drive the
+// full-page ultrablur ambient from the current title's colors. The poster
+// strip at the hero bottom is the slide control. =====
+(function phero() {
+  const root = document.getElementById("phero");
+  if (!root) return;
+  const slides = Array.from(root.querySelectorAll(".phero-slide"));
   if (!slides.length) return;
 
-  const blurCurrent = document.querySelector(".hero-bg-blur");
-  const blurNext = document.querySelector(".hero-bg-blur-next");
-  const dotsWrap = document.getElementById("heroDots");
-  const prevBtn = document.getElementById("heroPrev");
-  const nextBtn = document.getElementById("heroNext");
+  const bgCurrent = document.querySelector(".app-bg");
+  const bgNext = document.querySelector(".app-bg-next");
+  const strip = Array.from(root.querySelectorAll(".phero-card"));
 
   let index = 0;
   let timer = null;
-  const INTERVAL = 5000;
+  const INTERVAL = 6500;
 
-  // dots
-  slides.forEach((_, i) => {
-    const b = document.createElement("button");
-    b.setAttribute("aria-label", "Slide " + (i + 1));
-    b.addEventListener("click", () => {
+  strip.forEach((item, i) => {
+    item.addEventListener("click", () => {
       go(i);
       restart();
     });
-    dotsWrap.appendChild(b);
   });
-  const dots = Array.from(dotsWrap.children);
 
   function colorsOf(slide) {
     return {
@@ -47,29 +44,29 @@ function buildUltraBlurGradient(tl, tr, br, bl) {
     };
   }
 
-  function transitionUltrablur(slide) {
+  function paintAmbient(slide) {
+    if (!bgCurrent || !bgNext) return;
     const { tl, tr, br, bl } = colorsOf(slide);
-    blurNext.style.background = buildUltraBlurGradient(tl, tr, br, bl);
-    blurNext.style.opacity = "1";
-    blurCurrent.style.opacity = "0";
+    bgNext.style.background = buildUltraBlurGradient(tl, tr, br, bl);
+    bgNext.style.opacity = "1";
+    bgCurrent.style.opacity = "0";
     setTimeout(() => {
-      blurCurrent.style.background = blurNext.style.background;
-      blurCurrent.style.opacity = "1";
-      blurNext.style.opacity = "0";
-    }, 900);
+      bgCurrent.style.background = bgNext.style.background;
+      bgCurrent.style.opacity = "1";
+      bgNext.style.opacity = "0";
+    }, 850);
   }
 
   function go(i) {
+    slides[index].classList.remove("active");
+    strip[index] && strip[index].classList.remove("active");
     index = (i + slides.length) % slides.length;
-    const offset = slides[index].offsetLeft;
-    track.style.transform = `translateX(-${offset}px)`;
-    dots.forEach((d, di) => d.classList.toggle("active", di === index));
-    transitionUltrablur(slides[index]);
+    slides[index].classList.add("active");
+    strip[index] && strip[index].classList.add("active");
+    paintAmbient(slides[index]);
   }
 
   const next = () => go(index + 1);
-  const prev = () => go(index - 1);
-
   function start() {
     timer = setInterval(next, INTERVAL);
   }
@@ -81,61 +78,16 @@ function buildUltraBlurGradient(tl, tr, br, bl) {
     start();
   }
 
-  nextBtn?.addEventListener("click", () => {
-    next();
-    restart();
-  });
-  prevBtn?.addEventListener("click", () => {
-    prev();
-    restart();
-  });
+  root.addEventListener("mouseenter", stop);
+  root.addEventListener("mouseleave", start);
 
-  const hero = document.getElementById("hero");
-  hero.addEventListener("mouseenter", stop);
-  hero.addEventListener("mouseleave", start);
-  window.addEventListener("resize", () => go(index));
-
-  // init: paint ambient immediately (no crossfade on first)
+  // init: first slide active + paint immediately (no fade)
   const c0 = colorsOf(slides[0]);
-  blurCurrent.style.background = buildUltraBlurGradient(
-    c0.tl,
-    c0.tr,
-    c0.br,
-    c0.bl,
-  );
-  blurCurrent.style.opacity = "1";
-  go(0);
+  if (bgCurrent) {
+    bgCurrent.style.background = buildUltraBlurGradient(c0.tl, c0.tr, c0.br, c0.bl);
+    bgCurrent.style.opacity = "1";
+  }
+  slides[0].classList.add("active");
+  strip[0] && strip[0].classList.add("active");
   start();
-})();
-
-// Genre filter tabs
-(function genreFilter() {
-  const tabs = document.getElementById("genreTabs");
-  const grid = document.getElementById("movieGrid");
-  if (!tabs || !grid) return;
-
-  const label = document.getElementById("sectionLabel");
-  const empty = document.getElementById("emptyGenre");
-  const cards = Array.from(grid.querySelectorAll("[data-genre]"));
-
-  tabs.addEventListener("click", (e) => {
-    const btn = e.target.closest(".pill");
-    if (!btn) return;
-    const genre = btn.dataset.genre;
-
-    tabs
-      .querySelectorAll(".pill")
-      .forEach((p) => p.classList.toggle("active", p === btn));
-
-    let shown = 0;
-    cards.forEach((card) => {
-      const match = genre === "All" || card.dataset.genre === genre;
-      card.style.display = match ? "" : "none";
-      if (match) shown++;
-    });
-
-    label.textContent =
-      genre === "All" ? "Trending Now" : "Trending in " + genre;
-    empty.style.display = shown === 0 ? "block" : "none";
-  });
 })();

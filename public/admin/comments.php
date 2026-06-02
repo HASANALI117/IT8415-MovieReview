@@ -1,8 +1,8 @@
 <?php
-// admin_comments.php
+// admin/comments.php
 // Admin Panel: view and moderate all comments across all movies
 
-session_start();
+require_once __DIR__ . '/../../includes/session.php';
 require_once __DIR__ . '/../../src/Database.php';
 require_once __DIR__ . '/../../src/Comment.php';
 
@@ -53,199 +53,82 @@ $totalPages  = max(1, ceil($totalItems / $perPage));
 $currentPage = max(1, min((int)($_GET['page'] ?? 1), $totalPages));
 $offset      = ($currentPage - 1) * $perPage;
 $comments    = array_slice(array_values($comments), $offset, $perPage);
+
+$page_title = 'Comment Moderation — Admin Panel';
+$active_nav = 'admin';
+$admin_tab  = 'comments';
+require __DIR__ . '/../../includes/header.php';
+require __DIR__ . '/../../includes/admin_nav.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Comment Moderation – Admin Panel</title>
-    <style>
-        * { box-sizing: border-box; }
-        body       { font-family: Arial, sans-serif; margin: 0; background: #f4f4f4; }
-        header     { background: #1a1a2e; color: #fff; padding: 16px 24px;
-                     display: flex; justify-content: space-between; align-items: center; }
-        header a   { color: #e0b0ff; text-decoration: none; margin-left: 16px; }
 
-        .container { max-width: 1100px; margin: 30px auto; padding: 0 20px 60px; }
-        h2         { color: #1a1a2e; margin-bottom: 4px; }
-        .subtitle  { color: #666; font-size: 14px; margin-bottom: 24px; }
+  <div class="page-heading">
+    <h1>Comment Moderation</h1>
+    <p>Remove inappropriate comments or restore previously removed ones.</p>
+  </div>
 
-        /* message */
-        .msg-success { background: #d4edda; color: #155724; padding: 12px 16px;
-                       border-radius: 6px; margin-bottom: 20px; }
+  <?php if ($message): ?>
+    <div class="flash flash--ok"><?= htmlspecialchars($message) ?></div>
+  <?php endif; ?>
 
-        /* filters */
-        .filters      { display: flex; gap: 12px; align-items: center;
-                        flex-wrap: wrap; margin-bottom: 20px; }
-        .filters input { padding: 9px 12px; border: 1px solid #ccc; border-radius: 6px;
-                         font-size: 14px; width: 280px; }
-        .filters input:focus { outline: none; border-color: #6f42c1; }
-        .filter-btn   { padding: 9px 16px; border-radius: 6px; border: 1px solid #ccc;
-                        background: #fff; font-size: 14px; cursor: pointer;
-                        text-decoration: none; color: #333; }
-        .filter-btn.active { background: #1a1a2e; color: #fff; border-color: #1a1a2e; }
-        .total-count  { margin-left: auto; font-size: 14px; color: #666; }
+  <!-- filters bar -->
+  <form method="get" class="filter-bar" action="/admin/comments.php">
+    <input type="text" name="search" class="form-control" placeholder="Search by comment, user, or movie…"
+           value="<?= htmlspecialchars($search) ?>">
+    <a href="/admin/comments.php" class="glass-btn glass-btn--sm <?= $statusFilter === 'all' ? 'glass-btn--accent' : '' ?>">All</a>
+    <a href="/admin/comments.php?status=active&search=<?= urlencode($search) ?>" class="glass-btn glass-btn--sm <?= $statusFilter === 'active' ? 'glass-btn--accent' : '' ?>">Active</a>
+    <a href="/admin/comments.php?status=removed&search=<?= urlencode($search) ?>" class="glass-btn glass-btn--sm <?= $statusFilter === 'removed' ? 'glass-btn--accent' : '' ?>">Removed</a>
+    <button type="submit" class="glass-btn glass-btn--sm glass-btn--accent">Search</button>
+    <span style="margin-left:auto;align-self:center;color:var(--ink-soft);font-size:.85rem">
+      <?= $totalItems ?> comment(s) found
+    </span>
+  </form>
 
-        /* comment cards */
-        .comment-card  { background: #fff; border-radius: 10px; padding: 18px 22px;
-                         box-shadow: 0 2px 8px rgba(0,0,0,.07); margin-bottom: 14px;
-                         border-left: 4px solid #6f42c1; }
-        .comment-card.removed { border-left-color: #dc3545; opacity: 0.75; }
-
-        .card-top      { display: flex; justify-content: space-between;
-                         align-items: flex-start; gap: 12px; flex-wrap: wrap; }
-        .card-meta     { font-size: 13px; color: #555; }
-        .card-meta b   { color: #1a1a2e; }
-        .card-meta .movie-tag { background: #e8eaf6; color: #3949ab; padding: 2px 8px;
-                                border-radius: 10px; font-size: 12px; margin-left: 6px; }
-
-        .card-body     { margin: 12px 0 0; font-size: 15px; color: #333;
-                         line-height: 1.6; word-break: break-word; }
-        .card-body.redacted { color: #999; font-style: italic; }
-
-        .removed-note  { font-size: 12px; color: #dc3545; margin-top: 8px; }
-
-        /* action buttons */
-        .btn       { display: inline-block; padding: 6px 14px; border-radius: 5px;
-                     font-size: 13px; cursor: pointer; border: none; }
-        .btn-remove  { background: #dc3545; color: #fff; }
-        .btn-restore { background: #28a745; color: #fff; }
-
-        .no-results { text-align: center; color: #888; padding: 50px;
-                      font-style: italic; }
-
-        /* pagination */
-        .pagination  { display: flex; gap: 6px; justify-content: center; margin-top: 28px; }
-        .page-btn    { padding: 7px 13px; border-radius: 5px; border: 1px solid #ccc;
-                       background: #fff; cursor: pointer; font-size: 14px;
-                       text-decoration: none; color: #333; }
-        .page-btn.active { background: #1a1a2e; color: #fff; border-color: #1a1a2e; }
-        .page-btn:hover:not(.active) { background: #f0f0f0; }
-    </style>
-</head>
-<body>
-
-<header>
-    <span>🛡️ Admin Panel</span>
-    <div>
-        <a href="movies.php">Content</a>
-        <a href="reports.php">Reports</a>
-        <a href="users.php">Users</a>
-        <a href="comments.php">Comments</a>
-        <a href="/index.php">Home</a>
-        <a href="/auth/logout.php">Logout (<?php echo htmlspecialchars($_SESSION['username']); ?>)</a>
-    </div>
-</header>
-
-<div class="container">
-    <h2>Comment Moderation</h2>
-    <p class="subtitle">Remove inappropriate comments or restore previously removed ones.</p>
-
-    <?php if ($message): ?>
-        <div class="msg-success"><?php echo htmlspecialchars($message); ?></div>
-    <?php endif; ?>
-
-    <!-- filters bar -->
-    <form method="get" style="margin:0">
-        <div class="filters">
-            <input type="text" name="search"
-                   placeholder="Search by comment, user, or movie..."
-                   value="<?php echo htmlspecialchars($search); ?>">
-
-            <a href="comments.php"
-               class="filter-btn <?php echo $statusFilter === 'all'     ? 'active' : ''; ?>">
-                All
-            </a>
-            <a href="comments.php?status=active&search=<?php echo urlencode($search); ?>"
-               class="filter-btn <?php echo $statusFilter === 'active'  ? 'active' : ''; ?>">
-                Active
-            </a>
-            <a href="comments.php?status=removed&search=<?php echo urlencode($search); ?>"
-               class="filter-btn <?php echo $statusFilter === 'removed' ? 'active' : ''; ?>">
-                Removed
-            </a>
-
-            <button type="submit" class="filter-btn">Search</button>
-
-            <span class="total-count">
-                <?php echo $totalItems; ?> comment(s) found
-            </span>
+  <?php if (empty($comments)): ?>
+    <div class="empty-state"><h3>No comments found.</h3></div>
+  <?php else: ?>
+    <?php foreach ($comments as $c): ?>
+      <div class="glass-card" style="padding:18px 22px;margin-bottom:14px;border-left:4px solid <?= $c['is_removed'] ? 'var(--danger)' : 'var(--accent)' ?>;<?= $c['is_removed'] ? 'opacity:.8' : '' ?>">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+          <div style="font-size:13px;color:var(--ink-soft)">
+            <b style="color:var(--ink)"><?= htmlspecialchars($c['username']) ?></b>
+            &nbsp;on&nbsp;
+            <span class="badge-pill" style="background:var(--accent-soft);color:var(--accent-dk)"><?= htmlspecialchars($c['movie_title']) ?></span>
+            &nbsp;&mdash;&nbsp;<?= date('d M Y, H:i', strtotime($c['created_at'])) ?>
+          </div>
+          <form method="post" style="margin:0">
+            <input type="hidden" name="comment_id" value="<?= $c['comment_id'] ?>">
+            <?php if (!$c['is_removed']): ?>
+              <input type="hidden" name="action" value="remove">
+              <button class="glass-btn glass-btn--sm glass-btn--danger" onclick="return confirm('Remove this comment?')">Remove</button>
+            <?php else: ?>
+              <input type="hidden" name="action" value="restore">
+              <button class="glass-btn glass-btn--sm" onclick="return confirm('Restore this comment?')">Restore</button>
+            <?php endif; ?>
+          </form>
         </div>
-    </form>
 
-    <?php if (empty($comments)): ?>
-        <p class="no-results">No comments found.</p>
-    <?php else: ?>
-        <?php foreach ($comments as $c): ?>
-            <div class="comment-card <?php echo $c['is_removed'] ? 'removed' : ''; ?>">
-                <div class="card-top">
-                    <div class="card-meta">
-                        <b><?php echo htmlspecialchars($c['username']); ?></b>
-                        &nbsp;on&nbsp;
-                        <span class="movie-tag">
-                            <?php echo htmlspecialchars($c['movie_title']); ?>
-                        </span>
-                        &nbsp;&mdash;&nbsp;
-                        <?php echo date('d M Y, H:i', strtotime($c['created_at'])); ?>
-                    </div>
-
-                    <!-- action button -->
-                    <form method="post" style="margin:0">
-                        <input type="hidden" name="comment_id"
-                               value="<?php echo $c['comment_id']; ?>">
-                        <?php if (!$c['is_removed']): ?>
-                            <input type="hidden" name="action" value="remove">
-                            <button class="btn btn-remove"
-                                    onclick="return confirm('Remove this comment?')">
-                                Remove
-                            </button>
-                        <?php else: ?>
-                            <input type="hidden" name="action" value="restore">
-                            <button class="btn btn-restore"
-                                    onclick="return confirm('Restore this comment?')">
-                                Restore
-                            </button>
-                        <?php endif; ?>
-                    </form>
-                </div>
-
-                <!-- comment body, show placeholder if removed -->
-                <?php if ($c['is_removed']): ?>
-                    <p class="card-body redacted">
-                        [This comment has been removed by an admin]
-                    </p>
-                    <?php if ($c['removed_by_name']): ?>
-                        <p class="removed-note">
-                            Removed by: <?php echo htmlspecialchars($c['removed_by_name']); ?>
-                            <?php if ($c['removed_at']): ?>
-                                on <?php echo date('d M Y', strtotime($c['removed_at'])); ?>
-                            <?php endif; ?>
-                        </p>
-                    <?php endif; ?>
-                <?php else: ?>
-                    <p class="card-body">
-                        <?php echo nl2br(htmlspecialchars($c['body'])); ?>
-                    </p>
-                <?php endif; ?>
-            </div>
-        <?php endforeach; ?>
-
-        <!-- pagination -->
-        <?php if ($totalPages > 1): ?>
-            <div class="pagination">
-                <?php for ($p = 1; $p <= $totalPages; $p++): ?>
-                    <a href="?page=<?php echo $p;
-                                         echo $search    ? '&search='  . urlencode($search)    : '';
-                                         echo $statusFilter !== 'all' ? '&status=' . $statusFilter : ''; ?>"
-                       class="page-btn <?php echo $p === $currentPage ? 'active' : ''; ?>">
-                        <?php echo $p; ?>
-                    </a>
-                <?php endfor; ?>
-            </div>
+        <?php if ($c['is_removed']): ?>
+          <p style="margin:12px 0 0;color:var(--ink-faint);font-style:italic">[This comment has been removed by an admin]</p>
+          <?php if ($c['removed_by_name']): ?>
+            <p style="font-size:12px;color:var(--danger);margin-top:8px">
+              Removed by: <?= htmlspecialchars($c['removed_by_name']) ?>
+              <?php if ($c['removed_at']): ?> on <?= date('d M Y', strtotime($c['removed_at'])) ?><?php endif; ?>
+            </p>
+          <?php endif; ?>
+        <?php else: ?>
+          <p style="margin:12px 0 0;font-size:15px;line-height:1.6;word-break:break-word"><?= nl2br(htmlspecialchars($c['body'])) ?></p>
         <?php endif; ?>
+      </div>
+    <?php endforeach; ?>
 
+    <?php if ($totalPages > 1): ?>
+      <nav class="pagination-row">
+        <?php for ($p = 1; $p <= $totalPages; $p++): ?>
+          <a href="?page=<?= $p ?><?= $search ? '&search=' . urlencode($search) : '' ?><?= $statusFilter !== 'all' ? '&status=' . $statusFilter : '' ?>"
+             class="page-link-pill <?= $p === $currentPage ? 'active' : '' ?>"><?= $p ?></a>
+        <?php endfor; ?>
+      </nav>
     <?php endif; ?>
-</div>
+  <?php endif; ?>
 
-</body>
-</html>
+<?php require __DIR__ . '/../../includes/footer.php'; ?>

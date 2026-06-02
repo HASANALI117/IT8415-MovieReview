@@ -1,29 +1,9 @@
 <?php
-include "Header.php";
+require_once __DIR__ . '/../../includes/session.php';
 
-$page_title = 'Login';
+$errors = [];
 
-echo '<div id="content"><h1>Login</h1></div>';
-
-echo '<div id="stylized" class="myform">
-       <form action="login.php" method="post" id="login_form" name="login_form">
-           <label>Email
-           <span class="small">enter your email address</span>
-           </label>
-           <input type="text" name="Email" id="Email" value="" onblur="isValid(this);" />
-           <label id="EmailErr" class="err"></label>
-
-           <label>Password
-           <span class="small">enter your password</span>
-           </label>
-           <input type="password" name="Password" id="Password" onblur="isValid(this);" />
-           <label id="PasswordErr" class="err"></label>
-
-           <button type="submit" id="sub" name="submit" value="Login" disabled>Log in</button>
-           <input type ="hidden" name="submitted" value="TRUE">
-           <p><a href="register.php">or register here</a></p>
-         </form>';
-
+// Process login BEFORE any output so the redirect header works.
 if (isset($_POST['submitted'])) {
     require_once __DIR__ . '/../../src/Auth.php';
 
@@ -31,88 +11,86 @@ if (isset($_POST['submitted'])) {
 
     if ($check) {
         // Single app-wide session convention (lowercase): every guard across
-        // admin_*, creator_*, and the M3 pages checks these exact keys.
+        // admin/*, creator/*, and the M3 pages checks these exact keys.
         $_SESSION['user_id']  = $data['UserId'];
         $_SESSION['username'] = $data['Username'];
         $_SESSION['role']     = $data['Role'];
 
-        $url = absolute_url('home.php');
-        header("Location: $url");
+        header('Location: /auth/home.php');
         exit();
     } else {
         $errors = $data;
     }
 }
 
-echo'<div class="spacer"></div>';
-
-if (!empty($errors)) {
-    echo '<br/> <p class="error">The following errors occurred: <br />';
-
-    foreach ($errors as $err) {
-        echo "$err <br />";
-    }
-
-    echo '</p>';
-}
-
-echo '</div>';
+$page_title = 'Login — MovieReview';
+require __DIR__ . '/../../includes/header.php';
 ?>
+
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <h1>Welcome back</h1>
+      <p class="auth-sub">Log in to rate and review movies.</p>
+
+      <?php if (!empty($errors)): ?>
+        <div class="flash flash--error">
+          <?php foreach ($errors as $err) echo htmlspecialchars($err) . '<br>'; ?>
+        </div>
+      <?php endif; ?>
+
+      <form action="/auth/login.php" method="post" id="login_form" name="login_form">
+        <div class="auth-field">
+          <label class="form-label" for="Email">Email</label>
+          <input type="text" name="Email" id="Email" class="form-control" value="" onblur="isValid(this);">
+          <label id="EmailErr" class="err-label"></label>
+        </div>
+
+        <div class="auth-field">
+          <label class="form-label" for="Password">Password</label>
+          <input type="password" name="Password" id="Password" class="form-control" onblur="isValid(this);">
+          <label id="PasswordErr" class="err-label"></label>
+        </div>
+
+        <button type="submit" id="sub" name="submit" value="Login" class="glass-btn glass-btn--accent" style="width:100%" disabled>Log in</button>
+        <input type="hidden" name="submitted" value="TRUE">
+      </form>
+
+      <div class="auth-foot">No account yet? <a href="/auth/register.php">Register here</a></div>
+    </div>
+  </div>
 
 <script>
 window.onload = init;
 
-function init()
-{
-    var Email = document.getElementById('Email');
-    Email.onkeyup = handleKeyPress;
-
-    var Password = document.getElementById('Password');
-    Password.onkeyup = handleKeyPress;
+function init() {
+    document.getElementById('Email').onkeyup = handleKeyPress;
+    document.getElementById('Password').onkeyup = handleKeyPress;
 }
 
-function handleKeyPress(eventObj)
-{
-    var fld = eventObj.target;
-    var key = eventObj.key;
-    if(key != 'Tab')
-        isValid(fld);
+function handleKeyPress(eventObj) {
+    if (eventObj.key != 'Tab') isValid(eventObj.target);
 }
 
-function isValid(obj)
-{
+function isValid(obj) {
     var errField = obj.id + 'Err';
-    var valid = false;
-
-    var value = obj.value.trim();
-
-    if(value == '')
-    {
-        obj.style.backgroundColor = "yellow";
+    if (obj.value.trim() == '') {
+        obj.classList.add('error-field');
         document.getElementById(errField).innerHTML = obj.id + ' field may not be blank';
         document.getElementById('sub').disabled = true;
+        return false;
     }
-    else
-    {
-        obj.style.backgroundColor = "#FFFFFF";
-        document.getElementById(errField).innerHTML = '';
-        valid = true;
-        enableButton();
-    }
-
-    return valid;
+    obj.classList.remove('error-field');
+    document.getElementById(errField).innerHTML = '';
+    enableButton();
+    return true;
 }
 
-function enableButton()
-{
-    if(document.getElementById('Email').value != '' &&
-       document.getElementById('Password').value != '')
-    {
+function enableButton() {
+    if (document.getElementById('Email').value != '' &&
+        document.getElementById('Password').value != '') {
         document.getElementById('sub').disabled = false;
     }
 }
 </script>
 
-<?php
-include "Footer.php";
-?>
+<?php require __DIR__ . '/../../includes/footer.php'; ?>

@@ -1,115 +1,111 @@
 <?php
+require_once __DIR__ . '/../../includes/session.php';
 
-include 'Header.php';
-?>
+$errors     = [];
+$registered = false;
+$reg_name   = '';
 
-<h1>User Registration</h1>
-<div id="stylized" class="myform">
-  <form action="register.php" method="post" name="reg_form">
-     <fieldset>
-            <label><b>Enter Username</b></label>
-                <input type="text" name="Username" id="Username" size="20" value="" onblur="isValid(this);" />
-                <label id="UsernameErr" class="err"></label>
-            <label><b>Enter Email</b></label>
-                <input type="text" name="Email" id="Email" size="50" value="" onblur="isValid(this);" />
-                <label id="EmailErr" class="err"></label>
-            <label><b>Enter Password</b></label>
-                <input type="password" name="Password" id="Password" size="10" value="" onblur="isValid(this);" />
-                <label id="PasswordErr" class="err"></label>
-            <div align="center">
-                  <input type="submit" id="sub" value="Register" disabled />
-            </div>
-            <input type="hidden" name="submitted" value="1" />
-     </fieldset>
-  </form>
-  <div class="spacer"></div>
-
-<script>
-window.onload = init;
-
-function init()
-{
-    var Username = document.getElementById('Username');
-    Username.onkeyup = handleKeyPress;
-
-    var Email = document.getElementById('Email');
-    Email.onkeyup = handleKeyPress;
-
-    var Password = document.getElementById('Password');
-    Password.onkeyup = handleKeyPress;
-}
-
-function handleKeyPress(eventObj)
-{
-    var fld = eventObj.target;
-    var key = eventObj.key;
-    if(key != 'Tab')
-        isValid(fld);
-}
-
-function isValid(obj)
-{
-    var errField = obj.id + 'Err';
-    var valid = false;
-
-    var value = obj.value.trim();
-
-    if(value == '')
-    {
-        obj.style.backgroundColor = "yellow";
-        document.getElementById(errField).innerHTML = obj.id + ' field may not be blank';
-        document.getElementById('sub').disabled = true;
-    }
-    else
-    {
-        obj.style.backgroundColor = "#FFFFFF";
-        document.getElementById(errField).innerHTML = '';
-        valid = true;
-        enableButton();
-    }
-
-    return valid;
-}
-
-function enableButton()
-{
-    if(document.getElementById('Username').value != '' &&
-       document.getElementById('Email').value != '' &&
-       document.getElementById('Password').value != '')
-    {
-        document.getElementById('sub').disabled = false;
-    }
-}
-</script>
-
-<?php
+// Process registration before output.
 if (isset($_POST['submitted'])) {
     require_once __DIR__ . '/../../src/User.php';
 
     $user = new User();
     $user->username = trim($_POST['Username']);
-    $user->email = trim($_POST['Email']);
+    $user->email    = trim($_POST['Email']);
     $user->password = trim($_POST['Password']);
-    $user->role = 'viewer';
+    $user->role     = 'viewer';
 
     $errors = $user->isValid();
 
-    if (empty($errors))
-    {
-        if ($user->save()) {
-            echo "<h1> Thankyou </h1><p>$user->username you are now registered</p>".'<a href="login.php"> go to login';
-        }
-    }
-    else
-    {
-        echo '<p class="error"> Error </p>';
-
-        foreach ($errors as $msg)
-            echo " - $msg<br /> ";
+    if (empty($errors) && $user->save()) {
+        $registered = true;
+        $reg_name   = $user->username;
     }
 }
+
+$page_title = 'Register — MovieReview';
+require __DIR__ . '/../../includes/header.php';
 ?>
-</div>
-<?php
-include 'Footer.php';
-?>
+
+  <div class="auth-wrap">
+    <div class="auth-card">
+
+      <?php if ($registered): ?>
+        <h1>Thank you</h1>
+        <p class="auth-sub"><strong><?= htmlspecialchars($reg_name) ?></strong>, you are now registered.</p>
+        <a href="/auth/login.php" class="glass-btn glass-btn--accent" style="width:100%">Go to login</a>
+      <?php else: ?>
+        <h1>Create account</h1>
+        <p class="auth-sub">Join to rate and review movies.</p>
+
+        <?php if (!empty($errors)): ?>
+          <div class="flash flash--error">
+            <?php foreach ($errors as $msg) echo htmlspecialchars($msg) . '<br>'; ?>
+          </div>
+        <?php endif; ?>
+
+        <form action="/auth/register.php" method="post" name="reg_form">
+          <div class="auth-field">
+            <label class="form-label" for="Username">Username</label>
+            <input type="text" name="Username" id="Username" class="form-control" value="" onblur="isValid(this);">
+            <label id="UsernameErr" class="err-label"></label>
+          </div>
+          <div class="auth-field">
+            <label class="form-label" for="Email">Email</label>
+            <input type="text" name="Email" id="Email" class="form-control" value="" onblur="isValid(this);">
+            <label id="EmailErr" class="err-label"></label>
+          </div>
+          <div class="auth-field">
+            <label class="form-label" for="Password">Password</label>
+            <input type="password" name="Password" id="Password" class="form-control" value="" onblur="isValid(this);">
+            <label id="PasswordErr" class="err-label"></label>
+          </div>
+          <button type="submit" id="sub" class="glass-btn glass-btn--accent" style="width:100%" disabled>Register</button>
+          <input type="hidden" name="submitted" value="1">
+        </form>
+
+        <div class="auth-foot">Already have an account? <a href="/auth/login.php">Log in</a></div>
+      <?php endif; ?>
+
+    </div>
+  </div>
+
+<?php if (!$registered): ?>
+<script>
+window.onload = init;
+
+function init() {
+    document.getElementById('Username').onkeyup = handleKeyPress;
+    document.getElementById('Email').onkeyup = handleKeyPress;
+    document.getElementById('Password').onkeyup = handleKeyPress;
+}
+
+function handleKeyPress(eventObj) {
+    if (eventObj.key != 'Tab') isValid(eventObj.target);
+}
+
+function isValid(obj) {
+    var errField = obj.id + 'Err';
+    if (obj.value.trim() == '') {
+        obj.classList.add('error-field');
+        document.getElementById(errField).innerHTML = obj.id + ' field may not be blank';
+        document.getElementById('sub').disabled = true;
+        return false;
+    }
+    obj.classList.remove('error-field');
+    document.getElementById(errField).innerHTML = '';
+    enableButton();
+    return true;
+}
+
+function enableButton() {
+    if (document.getElementById('Username').value != '' &&
+        document.getElementById('Email').value != '' &&
+        document.getElementById('Password').value != '') {
+        document.getElementById('sub').disabled = false;
+    }
+}
+</script>
+<?php endif; ?>
+
+<?php require __DIR__ . '/../../includes/footer.php'; ?>

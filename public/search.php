@@ -2,10 +2,7 @@
 require_once __DIR__ . '/../includes/session.php';
 require_once __DIR__ . '/../src/Movie.php';
 
-$logged_in = is_logged_in();
-$username   = current_username();
-$site_name  = 'MovieReview';
-$genres     = Movie::genreList();
+$genres = Movie::genreList();
 
 // Filters from GET
 $q        = trim($_GET['q'] ?? '');
@@ -38,7 +35,16 @@ function s_card(array $m): string
     $poster = htmlspecialchars($m['poster']);
     $rating = number_format((float)$m['rating'], 1);
     $year   = (int)$m['year'];
+    $logo   = htmlspecialchars($m['fanart_logo'] ?? '');
     $grad   = "linear-gradient(135deg,#{$m['color_tl']},#{$m['color_br']})";
+
+    // logo art in place of the text title, falling back to text if it fails to load
+    $titleBlock = $logo !== ''
+        ? "<img class=\"card-logo\" src=\"/{$logo}\" alt=\"{$title}\""
+          . " onerror=\"this.style.display='none';this.nextElementSibling.style.display='block';\">"
+          . "<div class=\"card-title\" style=\"display:none\">{$title}</div>"
+        : "<div class=\"card-title\">{$title}</div>";
+
     return <<<HTML
     <div class="col">
       <a href="/movie/detail.php?id={$id}" class="movie-card">
@@ -49,72 +55,45 @@ function s_card(array $m): string
           <span class="card-rating">&#9733; {$rating}</span>
         </div>
         <div class="card-meta">
-          <div class="card-title">{$title}</div>
+          {$titleBlock}
           <div class="card-sub">{$year} &middot; {$g}</div>
         </div>
       </a>
     </div>
     HTML;
 }
+
+$page_title = 'Search — MovieReview';
+$active_nav = 'search';
+require __DIR__ . '/../includes/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Search — <?= $site_name ?></title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
-  <link href="/css/style.css" rel="stylesheet">
-</head>
-<body>
 
-<nav class="app-nav">
-  <div class="nav-inner">
-    <a href="index.php" class="brand"><?= $site_name ?></a>
-    <ul class="nav-pills-row">
-      <?php foreach ($genres as $g): ?>
-        <li><a class="pill <?= strcasecmp($g, $genre ?: 'All') === 0 ? 'active' : '' ?>"
-               href="search.php?<?= http_build_query(['q' => $q, 'genre' => $g === 'All' ? '' : $g, 'sort' => $sort]) ?>">
-          <?= htmlspecialchars($g) ?></a></li>
-      <?php endforeach; ?>
-    </ul>
-    <div class="nav-right">
-      <button class="icon-btn" id="searchToggle" aria-label="Search">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-      </button>
-      <?php if ($logged_in): ?>
-        <div class="user-chip">
-          <div class="avatar-fallback"><?= strtoupper(substr($username ?: 'U', 0, 1)) ?></div>
-          <span class="fw-500 small"><?= htmlspecialchars($username) ?></span>
-        </div>
-      <?php else: ?>
-        <a href="/auth/login.php" class="btn btn-outline-primary btn-sm">Login</a>
-      <?php endif; ?>
-    </div>
+  <div class="page-heading">
+    <h1>Browse movies</h1>
+    <p>Pick a genre, or filter the catalogue by title, year and rating.</p>
   </div>
-  <div class="nav-search" id="navSearch">
-    <form action="search.php" method="get" class="nav-search-form" autocomplete="off">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-      <input type="text" name="q" id="liveSearch" value="<?= htmlspecialchars($q) ?>" placeholder="Search movies…" aria-label="Search movies">
-      <div class="search-spinner" id="searchSpinner"></div>
-    </form>
-    <div class="search-dropdown" id="searchDropdown"></div>
-  </div>
-</nav>
 
-<main class="container-xxl py-4 search-page">
+  <!-- Genre browser (one-click, preserves the other filters) -->
+  <ul class="genre-bar">
+    <?php foreach ($genres as $g): ?>
+      <?php
+        $isAll  = ($g === 'All');
+        $params = array_filter(
+          ['q' => $q, 'date_from' => $dateFrom, 'date_to' => $dateTo, 'sort' => $sort],
+          fn($v) => $v !== ''
+        );
+        if (!$isAll) $params['genre'] = $g;
+        $href   = '/search.php' . ($params ? '?' . http_build_query($params) : '');
+        $active = $isAll ? ($genre === '') : (strcasecmp($g, $genre) === 0);
+      ?>
+      <li><a class="pill <?= $active ? 'active' : '' ?>" href="<?= htmlspecialchars($href) ?>"><?= htmlspecialchars($g) ?></a></li>
+    <?php endforeach; ?>
+  </ul>
 
-  <!-- Filter bar -->
-  <form class="filter-bar" method="get" action="search.php">
+  <!-- Filter bar (genre carried via the pills above) -->
+  <form class="filter-bar" method="get" action="/search.php">
+    <input type="hidden" name="genre" value="<?= htmlspecialchars($genre) ?>">
     <input type="text" name="q" value="<?= htmlspecialchars($q) ?>" placeholder="Title or keyword…" class="form-control">
-    <select name="genre" class="form-select">
-      <option value="">All genres</option>
-      <?php foreach (array_slice($genres, 1) as $g): ?>
-        <option value="<?= htmlspecialchars($g) ?>" <?= strcasecmp($g, $genre) === 0 ? 'selected' : '' ?>><?= htmlspecialchars($g) ?></option>
-      <?php endforeach; ?>
-    </select>
     <input type="number" name="date_from" value="<?= htmlspecialchars($dateFrom) ?>" placeholder="From yr" class="form-control" min="1900" max="2100">
     <input type="number" name="date_to" value="<?= htmlspecialchars($dateTo) ?>" placeholder="To yr" class="form-control" min="1900" max="2100">
     <select name="sort" class="form-select">
@@ -122,7 +101,7 @@ function s_card(array $m): string
       <option value="rating" <?= $sort === 'rating' ? 'selected' : '' ?>>Top rated</option>
       <option value="title"  <?= $sort === 'title'  ? 'selected' : '' ?>>A–Z</option>
     </select>
-    <button class="btn btn-primary" type="submit">Search</button>
+    <button class="glass-btn glass-btn--accent" type="submit">Search</button>
   </form>
 
   <h2 class="section-label">
@@ -137,7 +116,7 @@ function s_card(array $m): string
     <div class="empty-state">
       <div class="empty-emoji">🎬</div>
       <h3>No matches found</h3>
-      <p>Try a shorter keyword, clear filters, or <a href="search.php">browse all movies</a>.</p>
+      <p>Try a shorter keyword, clear filters, or <a href="/search.php">browse all movies</a>.</p>
     </div>
   <?php else: ?>
     <div class="row row-cols-2 row-cols-md-3 row-cols-xl-5 g-3">
@@ -153,12 +132,4 @@ function s_card(array $m): string
     <?php endif; ?>
   <?php endif; ?>
 
-</main>
-
-<footer class="app-footer">
-  <div class="container-xxl"><span><?= $site_name ?></span> — IT8415 Database Programming 2 · Group Project</div>
-</footer>
-
-<script src="/js/search.js"></script>
-</body>
-</html>
+<?php require __DIR__ . '/../includes/footer.php'; ?>

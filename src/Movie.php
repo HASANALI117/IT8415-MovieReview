@@ -379,6 +379,7 @@ class Movie {
 
         $order = match ($sort) {
             'rating' => 'm.avg_rating DESC',
+            'views'  => 'm.view_count DESC, m.avg_rating DESC',
             'title'  => 'm.title ASC',
             default  => 'm.created_at DESC, m.movie_id DESC',
         };
