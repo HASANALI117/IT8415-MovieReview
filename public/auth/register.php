@@ -13,7 +13,7 @@ if (isset($_POST['submitted'])) {
     $user->username = trim($_POST['Username']);
     $user->email    = trim($_POST['Email']);
     $user->password = trim($_POST['Password']);
-    $user->role     = 'viewer';
+    $user->role     = 'creator';
 
     $errors = $user->isValid();
 
@@ -21,7 +21,7 @@ if (isset($_POST['submitted'])) {
         // Auto-login the new account and go straight to the homepage.
         $_SESSION['user_id']  = $user->userId;
         $_SESSION['username'] = $user->username;
-        $_SESSION['role']     = 'viewer';
+        $_SESSION['role']     = 'creator';
         header('Location: ' . app_url('index.php'));
         exit;
     }

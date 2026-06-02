@@ -1,8 +1,8 @@
 # IT8415 — MovieReview
 
-A PHP + MySQL movie-review web application. Visitors can browse and search published
-movies; registered **viewers** can rate and comment; **creators** can add and publish
-their own movies; **admins** manage users, movies, comments, and reports.
+A PHP + MySQL movie-review web application. Visitors (logged-out) can browse and search
+published movies; any registered user is a **creator** — they can rate, comment, and add
+and publish their own movies; **admins** manage users, movies, comments, and reports.
 
 ## Tech stack
 
@@ -75,9 +75,9 @@ Loaded by [`database/05_seed_users.sql`](database/05_seed_users.sql). Log in at
 | Admin   | `admin@movie.test` | `Admin@123`   | Full admin panels             |
 | Creator | `jane@movie.test`  | `Creator@123` | Can add/publish movies        |
 | Creator | `marco@movie.test` | `Creator@123` | Second creator                |
-| Viewer  | `bob@movie.test`   | `Viewer@123`  | Can rate & comment            |
-| Viewer  | `alice@movie.test` | `Viewer@123`  | Can rate & comment            |
-| Viewer  | `sam@movie.test`   | `Viewer@123`  | Inactive account (`is_active = 0`) |
+| Creator | `bob@movie.test`   | `Viewer@123`  | Can rate, comment & add movies |
+| Creator | `alice@movie.test` | `Viewer@123`  | Can rate, comment & add movies |
+| Creator | `sam@movie.test`   | `Viewer@123`  | Inactive account (`is_active = 0`) |
 
 > ⚠️ These are throwaway development credentials. Do not seed them in a
 > production deployment.

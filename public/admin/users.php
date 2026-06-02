@@ -64,7 +64,7 @@ function setUserActive($user_id, $active) {
 
 // change a user's role
 function setUserRole($user_id, $role) {
-    $allowed = ['viewer', 'creator', 'admin'];
+    $allowed = ['creator', 'admin'];
     if (!in_array($role, $allowed)) return false;
 
     $conn = getConnection();
@@ -141,7 +141,7 @@ $admin_tab  = 'users';
 require __DIR__ . '/../../includes/header.php';
 require __DIR__ . '/../../includes/admin_nav.php';
 
-$role_badge = ['admin' => 'badge-pill--danger', 'creator' => '', 'viewer' => 'badge-pill--ok'];
+$role_badge = ['admin' => 'badge-pill--danger', 'creator' => ''];
 ?>
 
   <div class="page-heading">
@@ -158,7 +158,6 @@ $role_badge = ['admin' => 'badge-pill--danger', 'creator' => '', 'viewer' => 'ba
     <input type="text" name="search" class="form-control" placeholder="Search by username or email…"
            value="<?= htmlspecialchars($search) ?>">
     <a href="/admin/users.php" class="glass-btn glass-btn--sm <?= $roleFilter === 'all' ? 'glass-btn--accent' : '' ?>">All</a>
-    <a href="/admin/users.php?role=viewer&search=<?= urlencode($search) ?>" class="glass-btn glass-btn--sm <?= $roleFilter === 'viewer' ? 'glass-btn--accent' : '' ?>">Viewers</a>
     <a href="/admin/users.php?role=creator&search=<?= urlencode($search) ?>" class="glass-btn glass-btn--sm <?= $roleFilter === 'creator' ? 'glass-btn--accent' : '' ?>">Creators</a>
     <a href="/admin/users.php?role=admin&search=<?= urlencode($search) ?>" class="glass-btn glass-btn--sm <?= $roleFilter === 'admin' ? 'glass-btn--accent' : '' ?>">Admins</a>
     <button type="submit" class="glass-btn glass-btn--sm glass-btn--accent">Search</button>
@@ -218,7 +217,6 @@ $role_badge = ['admin' => 'badge-pill--danger', 'creator' => '', 'viewer' => 'ba
                   <input type="hidden" name="user_id" value="<?= $u['user_id'] ?>">
                   <input type="hidden" name="action" value="set_role">
                   <select name="new_role" class="glass-select" style="width:auto;padding:.3rem .5rem;font-size:.8rem">
-                    <option value="viewer"  <?= $u['role'] === 'viewer'  ? 'selected' : '' ?>>Viewer</option>
                     <option value="creator" <?= $u['role'] === 'creator' ? 'selected' : '' ?>>Creator</option>
                     <option value="admin"   <?= $u['role'] === 'admin'   ? 'selected' : '' ?>>Admin</option>
                   </select>

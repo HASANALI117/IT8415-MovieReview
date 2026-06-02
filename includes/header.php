@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Shared page header / layout top.
  *
@@ -43,21 +44,21 @@ $BASE_HREF = app_base_href();   // absolute scheme://host/.../public/ for must-l
  * the explicit absolute CSS/JS below start with "h", so they're left untouched.
  */
 if (!function_exists('rewrite_base_urls')) {
-    function rewrite_base_urls(string $html): string
-    {
-        $b = app_base_path();
-        if ($b === '/') return $html;          // public/ is the docroot — nothing to do
-        return strtr($html, [
-            'href="/'   => 'href="' . $b,
-            "href='/"   => "href='" . $b,
-            'src="/'    => 'src="' . $b,
-            "src='/"    => "src='" . $b,
-            'action="/' => 'action="' . $b,
-            "url('/"    => "url('" . $b,
-            'url("/'    => 'url("' . $b,
-            'url(/'     => 'url(' . $b,
-        ]);
-    }
+  function rewrite_base_urls(string $html): string
+  {
+    $b = app_base_path();
+    if ($b === '/') return $html;          // public/ is the docroot — nothing to do
+    return strtr($html, [
+      'href="/'   => 'href="' . $b,
+      "href='/"   => "href='" . $b,
+      'src="/'    => 'src="' . $b,
+      "src='/"    => "src='" . $b,
+      'action="/' => 'action="' . $b,
+      "url('/"    => "url('" . $b,
+      'url("/'    => 'url("' . $b,
+      'url(/'     => 'url(' . $b,
+    ]);
+  }
 }
 ob_start('rewrite_base_urls');   // PHP flushes this through the callback at request end
 
@@ -76,14 +77,14 @@ $bg_palette = $bg_palette ?? ['23306b', '3b2566', '14424f', '2a1d4d'];
  *  Saturated, opaque-at-corner blobs that overlap toward the centre and fill the
  *  whole viewport over the dark base — Plex-style ambient. */
 if (!function_exists('ultrablur_gradient')) {
-    function ultrablur_gradient(string $tl, string $tr, string $br, string $bl): string
-    {
-        return
-            "radial-gradient(ellipse 130% 130% at 0% 0%,     #{$tl} 0%, transparent 78%)," .
-            "radial-gradient(ellipse 130% 130% at 100% 0%,   #{$tr} 0%, transparent 78%)," .
-            "radial-gradient(ellipse 130% 130% at 100% 100%, #{$br} 0%, transparent 78%)," .
-            "radial-gradient(ellipse 130% 130% at 0% 100%,   #{$bl} 0%, transparent 78%)";
-    }
+  function ultrablur_gradient(string $tl, string $tr, string $br, string $bl): string
+  {
+    return
+      "radial-gradient(ellipse 130% 130% at 0% 0%,     #{$tl} 0%, transparent 78%)," .
+      "radial-gradient(ellipse 130% 130% at 100% 0%,   #{$tr} 0%, transparent 78%)," .
+      "radial-gradient(ellipse 130% 130% at 100% 100%, #{$br} 0%, transparent 78%)," .
+      "radial-gradient(ellipse 130% 130% at 0% 100%,   #{$bl} 0%, transparent 78%)";
+  }
 }
 $bg_css = ultrablur_gradient($bg_palette[0], $bg_palette[1], $bg_palette[2], $bg_palette[3]);
 
@@ -94,8 +95,8 @@ $role      = $_SESSION['role'] ?? '';
 /** nav pill helper */
 function nav_pill(string $href, string $label, string $key, string $active): string
 {
-    $cls = 'pill' . ($key === $active ? ' active' : '');
-    return '<li><a class="' . $cls . '" href="' . $href . '">' . htmlspecialchars($label) . '</a></li>';
+  $cls = 'pill' . ($key === $active ? ' active' : '');
+  return '<li><a class="' . $cls . '" href="' . $href . '">' . htmlspecialchars($label) . '</a></li>';
 }
 ?>
 <!DOCTYPE html>
@@ -108,12 +109,25 @@ function nav_pill(string $href, string $label, string $key, string $active): str
   <!-- Critical inline styles: applied instantly so there's no flash of unstyled
        content (white page / giant SVG icons) before theme.css finishes loading. -->
   <style>
-    html,body{margin:0;min-height:100%;background:#0b0d12;color:#eef1f6;
-      font-family:"DM Sans",system-ui,-apple-system,sans-serif}
-    .nav-tab svg,.glass-btn svg{width:20px;height:20px}
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: #0b0d12;
+      color: #eef1f6;
+      font-family: "DM Sans", system-ui, -apple-system, sans-serif
+    }
+
+    .nav-tab svg,
+    .glass-btn svg {
+      width: 20px;
+      height: 20px
+    }
   </style>
   <!-- Base path for JS-built URLs (fetch/ajax). -->
-  <script>window.BASE = <?= json_encode($BASE_PATH) ?>;</script>
+  <script>
+    window.BASE = <?= json_encode($BASE_PATH) ?>;
+  </script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
@@ -143,21 +157,30 @@ function nav_pill(string $href, string $label, string $key, string $active): str
       <!-- centre: tabs -->
       <ul class="nav-tabs">
         <li>
-          <a class="nav-tab <?= $active_nav === 'search' ? 'active' : '' ?>" href="/search.php" aria-label="Search">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-            <span>Search</span>
+          <a class="nav-tab <?= $active_nav === 'home' ? 'active' : '' ?>" href="/index.php">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 11l9-8 9 8" />
+              <path d="M5 10v10h14V10" />
+            </svg>
+            <span>Home</span>
           </a>
         </li>
         <li>
-          <a class="nav-tab <?= $active_nav === 'home' ? 'active' : '' ?>" href="/index.php">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
-            <span>Home</span>
+          <a class="nav-tab <?= $active_nav === 'browse' ? 'active' : '' ?>" href="/search.php" aria-label="Browse">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m21 21-4.3-4.3" />
+            </svg>
+            <span>Browse</span>
           </a>
         </li>
         <?php if ($role === 'creator' || $role === 'admin'): ?>
           <li>
             <a class="nav-tab <?= $active_nav === 'creator' ? 'active' : '' ?>" href="/creator/movies.php">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M17 9h4M3 15h4M17 15h4"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="16" rx="2" />
+                <path d="M7 4v16M17 4v16M3 9h4M17 9h4M3 15h4M17 15h4" />
+              </svg>
               <span>Creator</span>
             </a>
           </li>
@@ -165,17 +188,46 @@ function nav_pill(string $href, string $label, string $key, string $active): str
         <?php if ($role === 'admin'): ?>
           <li>
             <a class="nav-tab <?= $active_nav === 'admin' ? 'active' : '' ?>" href="/admin/movies.php">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" />
+              </svg>
               <span>Admin</span>
             </a>
           </li>
         <?php endif; ?>
         <!-- auth actions — now part of the tabs row (was the separate nav-right) -->
         <?php if ($logged_in): ?>
-          <li><a href="/auth/logout.php" class="glass-btn glass-btn--sm">Logout</a></li>
+          <li>
+            <a class="nav-tab" href="/auth/logout.php">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <path d="M16 17l5-5-5-5" />
+                <path d="M21 12H9" />
+              </svg>
+              <span>Logout</span>
+            </a>
+          </li>
         <?php else: ?>
-          <li><a href="/auth/login.php" class="glass-btn glass-btn--sm glass-btn--accent">Login</a></li>
-          <li><a href="/auth/register.php" class="glass-btn glass-btn--sm">Register</a></li>
+          <li>
+            <a class="nav-tab" href="/auth/login.php">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                <path d="M10 17l5-5-5-5" />
+                <path d="M15 12H3" />
+              </svg>
+              <span>Login</span>
+            </a>
+          </li>
+          <li>
+            <a class="nav-tab" href="/auth/register.php">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M19 8v6M22 11h-6" />
+              </svg>
+              <span>Register</span>
+            </a>
+          </li>
         <?php endif; ?>
       </ul>
     </div>
