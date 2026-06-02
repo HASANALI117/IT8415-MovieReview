@@ -35,15 +35,10 @@ function s_card(array $m): string
     $poster = htmlspecialchars($m['poster']);
     $rating = number_format((float)$m['rating'], 1);
     $year   = (int)$m['year'];
-    $logo   = htmlspecialchars($m['fanart_logo'] ?? '');
     $grad   = "linear-gradient(135deg,#{$m['color_tl']},#{$m['color_br']})";
 
-    // logo art in place of the text title, falling back to text if it fails to load
-    $titleBlock = $logo !== ''
-        ? "<img class=\"card-logo\" src=\"/{$logo}\" alt=\"{$title}\""
-          . " onerror=\"this.style.display='none';this.nextElementSibling.style.display='block';\">"
-          . "<div class=\"card-title\" style=\"display:none\">{$title}</div>"
-        : "<div class=\"card-title\">{$title}</div>";
+    // Text-based title beneath the poster (readable + accessible).
+    $titleBlock = "<div class=\"card-title\">{$title}</div>";
 
     return <<<HTML
     <div class="col">
