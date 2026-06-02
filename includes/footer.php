@@ -1,10 +1,6 @@
 <?php
-/**
- * Shared page footer / layout bottom. Pair with includes/header.php.
- *
- * Optional before include:
- *   $page_scripts  array  extra script src URLs, loaded after the core JS
- */
+// Shared page footer. Pair with includes/header.php.
+// Optional before include: $page_scripts (extra script URLs loaded after the core JS).
 $page_scripts = $page_scripts ?? [];
 $site_name    = $site_name ?? 'MovieReview';
 $hide_footer  = $hide_footer ?? false;

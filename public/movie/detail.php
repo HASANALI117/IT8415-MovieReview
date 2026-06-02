@@ -52,7 +52,7 @@ require __DIR__ . '/../../includes/header.php';
       <div class="pdetail-year"><?= (int)$movie['release_year'] ?></div>
 
       <div class="pdetail-meta">
-        <span class="pdetail-score">&#9733; <?= number_format((float)$movie['avg_rating'], 1) ?>/5</span>
+        <span class="pdetail-score">&#9733; <?= number_format((float)$movie['avg_rating'], 1) ?>/10</span>
         <?php if (!empty($movie['duration_min'])): ?>
           <span class="dot">&bull;</span><span><?= (int)$movie['duration_min'] ?> min</span>
         <?php endif; ?>
@@ -64,12 +64,17 @@ require __DIR__ . '/../../includes/header.php';
       <div class="pdetail-actions">
         <?php if (is_logged_in()): ?>
           <span style="color:var(--ink-soft);font-size:.9rem">Your rating:</span>
-          <div id="stars" class="star-rating" title="Click to rate">
+          <div id="stars" class="star-rating" title="Click to rate (out of 10)">
             <span data-value="1">&#9733;</span>
             <span data-value="2">&#9733;</span>
             <span data-value="3">&#9733;</span>
             <span data-value="4">&#9733;</span>
             <span data-value="5">&#9733;</span>
+            <span data-value="6">&#9733;</span>
+            <span data-value="7">&#9733;</span>
+            <span data-value="8">&#9733;</span>
+            <span data-value="9">&#9733;</span>
+            <span data-value="10">&#9733;</span>
           </div>
           <input type="hidden" id="selected-rating" value="0">
         <?php else: ?>
@@ -112,7 +117,9 @@ require __DIR__ . '/../../includes/header.php';
       ?>
         <div class="comment-item" id="comment-<?= $row['comment_id'] ?>">
           <strong><?= htmlspecialchars($row['username']) ?></strong>
-          <span style="color:#f5a623"><?= str_repeat('&#9733;', $row['stars'] ?? 0) ?></span>
+          <?php if (!empty($row['stars'])): ?>
+            <span style="color:#f5a623">&#9733; <?= (int)$row['stars'] ?>/10</span>
+          <?php endif; ?>
           <p><?= htmlspecialchars($row['body']) ?></p>
           <?php if ($is_admin): ?>
             <span class="delete-btn ui-icon ui-icon-trash" onclick="confirmDelete(<?= $row['comment_id'] ?>)"></span>

@@ -270,12 +270,8 @@ class Movie {
         return $ids;
     }
 
-    /* =========================================================================
-       Public site read API (home page + search).
-       These map the normalized schema onto the flat key shape the front-end
-       templates use: id, title, description, rating, year, genre, poster,
-       fanart_bg, fanart_logo, color_*, views, created_at.
-       ========================================================================= */
+    // Public site read API (home + search): maps the schema onto the flat keys
+    // the templates use (id, title, description, rating, year, genre, poster, ...).
 
     // SELECT projection shared by all public listing queries. `m` = dbProj_movies.
     private static function publicSelect(): string
@@ -358,11 +354,8 @@ class Movie {
         return $out;
     }
 
-    /**
-     * Search + filter published movies. $filters: q, genre, date_from, date_to, sort.
-     * Dynamic WHERE with bound params — user input never touches the SQL string.
-     * Returns [rows, totalMatched].
-     */
+    // Search + filter published movies. $filters: q, genre, date_from, date_to, sort.
+    // Dynamic WHERE with bound params (no user input in the SQL string). Returns [rows, total].
     public static function searchPublic(array $filters, int $limit = 10, int $offset = 0): array
     {
         $q        = trim($filters['q'] ?? '');

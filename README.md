@@ -1,89 +1,142 @@
-# IT8415 — MovieReview
+# MovieReview
 
-A PHP + MySQL movie-review web application. Visitors (logged-out) can browse and search
-published movies; any registered user is a **creator** — they can rate, comment, and add
-and publish their own movies; **admins** manage users, movies, comments, and reports.
+**IT8415 — Database Programming 2 · Group Project**
+
+A movie catalogue and review web application built with PHP and MySQL. Visitors can
+browse, search, and filter published movies and read reviews. Registered users can
+rate movies (out of 10), write reviews, and add/publish their own movies. Admins
+manage users, movies, and comments, and generate reports.
+
+## Features
+
+- **Browse & search** — genre filter, keyword search, year range, and sorting, all updated live with AJAX (no page reload).
+- **Movie details** — poster, synopsis, director, categories, average rating (out of 10), and user reviews.
+- **Ratings & reviews** — a 1–10 star rating plus a written review, posted and deleted via AJAX.
+- **Creator panel** — add, edit, publish/unpublish, and delete your own movies, with poster upload and a live "title already exists" check.
+- **Admin panel** — manage all movies, moderate comments, manage users, and run reports backed by stored procedures.
+- **Cinematic UI** — glassmorphism theme with a full-page ambient background and an animated hero on the home page.
 
 ## Tech stack
 
-- **PHP** (procedural + small OOP data layer in `src/`), `mysqli`
-- **MySQL / MariaDB** (InnoDB, triggers, stored procedures, fulltext search)
-- Vanilla **HTML/CSS/JS** front end (no framework)
-- Apache-style web root with `.htaccess`
+- **PHP** (procedural pages + a small OOP data layer in `src/`) using `mysqli`
+- **MySQL / MariaDB** — InnoDB tables, foreign keys, CHECK constraints, triggers, stored procedures, and a fulltext index
+- **HTML / CSS / JavaScript** front end (no framework); Bootstrap is used only for its grid
+- Apache-style web root (`public/`) with `.htaccess`
 
 ## Project structure
 
 ```
-config/db.php            Single source of DB credentials (app user: movie_app)
-database/                Schema + setup scripts (run in numeric order)
-  01_create_tables.sql   Tables, indexes, constraints
-  02_triggers.sql        Audit + rating-aggregate triggers
+config/db.php          Database credentials (the only place they live)
+database/              Schema + setup scripts, run in numeric order
+  01_create_tables.sql   Tables, indexes, constraints (ratings 1-10)
+  02_triggers.sql        Rating-aggregate + audit-log triggers
   03_procedures.sql      Stored procedures (rating, moderation, reports)
-  04_security.sql        Least-privilege DB users (movie_app, movie_report)
-  05_seed_users.sql      Test user accounts (see below)
+  04_security.sql        Least-privilege DB users (local/XAMPP only)
+  05_seed_users.sql      Seed user accounts (see Test accounts)
+  06_seed_movies.sql     Seed movies + categories
+  07_seed_reviews.sql    Seed ratings + reviews
   erd.html               Entity-relationship diagram
-src/                     OOP data objects (Database, User, Movie, Comment, Auth)
-includes/                Shared header/footer/session/nav partials
-public/                  Web root — point your server here
+src/                   Data classes: Database, User, Auth, Movie, Comment
+includes/              Shared header / footer / session / admin-nav partials
+public/                Web root — point the web server here
   index.php              Home page
-  auth/                  Register, login, logout, profile, user list
-  movie/ , search.php    Movie detail + search
-  creator/               Creator dashboard (add/edit/publish movies)
-  admin/                 Admin panels (users, movies, comments, reports)
-  ajax/                  JSON/AJAX endpoints
-  css/ js/ assets/       Static assets
+  search.php             Browse / search / filter (AJAX)
+  movie/detail.php       Movie detail, ratings, reviews
+  auth/                  Register, login, logout, user management
+  creator/               Creator dashboard (add / edit movies)
+  admin/                 Admin panels (movies, comments, users, reports)
+  ajax/                  JSON / AJAX endpoints
+  css/ js/ assets/       Stylesheet, scripts, uploaded posters
 ```
 
 ## Setup
 
 ### 1. Database
 
-Run the SQL scripts **in order** as a privileged MySQL account (e.g. `root`):
+Run the scripts **in numeric order**. On a local server (e.g. XAMPP) you can run them
+as `root`; `01_create_tables.sql` creates the `movie_review` database for you.
+
+```
+01_create_tables.sql
+02_triggers.sql
+03_procedures.sql
+04_security.sql        (local only — creates the app DB user)
+05_seed_users.sql
+06_seed_movies.sql
+07_seed_reviews.sql
+```
+
+You can import each file from phpMyAdmin (SQL tab) or the command line:
 
 ```bash
 mysql -u root -p < database/01_create_tables.sql
-mysql -u root -p < database/02_triggers.sql
-mysql -u root -p < database/03_procedures.sql
-mysql -u root -p < database/04_security.sql
-mysql -u root -p < database/05_seed_users.sql   # optional test data
+# ...repeat for 02–07
 ```
 
-Script `04_security.sql` creates the least-privilege application user
-`movie_app` that the app connects as. Credentials are read from
-[`config/db.php`](config/db.php) — update them there if you change the password.
+**On shared hosting / a lab server** (where you cannot create databases or users):
+1. Select your assigned database first.
+2. Remove the `DROP DATABASE` / `CREATE DATABASE` / `USE` lines at the top of `01_create_tables.sql`.
+3. **Skip `04_security.sql`** (you can't create MySQL users — use your assigned account instead).
+4. Put your assigned credentials in `config/db.php`.
 
-### 2. Web server
+> Note: `03_procedures.sql` and `07_seed_reviews.sql` contain stored procedures.
+> If phpMyAdmin doesn't honour the `DELIMITER` keyword, create the procedure using
+> the **Delimiter** field below the SQL box (set it to `$$`).
 
-Point a PHP-enabled web server at the `public/` directory.
+### 2. Configuration
 
-Quick local run with PHP's built-in server:
+Edit [`config/db.php`](config/db.php) with your database host, user, password, and name:
 
-```bash
-php -S localhost:8000 -t public
+```php
+return [
+    'host' => 'localhost',
+    'user' => 'your_db_user',
+    'pass' => 'your_db_password',
+    'name' => 'your_db_name',
+];
 ```
 
-Then open <http://localhost:8000>. (For full URL rewriting / `.htaccess`
-behaviour, use Apache with `mod_rewrite` and `AllowOverride All`.)
+### 3. Run
+
+Point a PHP-enabled web server at the **`public/`** directory.
+
+- **PHP built-in server:**
+  ```bash
+  php -S localhost:8000 -t public
+  ```
+  Then open <http://localhost:8000>.
+- **XAMPP/Apache:** set a virtual host with `DocumentRoot` pointing at `.../public`
+  and `AllowOverride All`.
+
+The app also runs correctly from a sub-folder (e.g. a UserDir URL like
+`http://host/~user/IT8415-MovieReview/public/`) — it detects its base path automatically.
 
 ## Test accounts
 
-Loaded by [`database/05_seed_users.sql`](database/05_seed_users.sql). Log in at
-`/auth/login.php` with the **email** and password below.
+Created by [`database/05_seed_users.sql`](database/05_seed_users.sql). Log in at
+`/auth/login.php` with the **email** and password:
 
-| Role    | Email              | Password      | Notes                         |
-|---------|--------------------|---------------|-------------------------------|
-| Admin   | `admin@movie.test` | `Admin@123`   | Full admin panels             |
-| Creator | `jane@movie.test`  | `Creator@123` | Can add/publish movies        |
-| Creator | `marco@movie.test` | `Creator@123` | Second creator                |
+| Role    | Email              | Password      |
+|---------|--------------------|---------------|
+| Admin   | `admin@movie.test` | `Admin@123`   |
+| Creator | `jane@movie.test`  | `Creator@123` |
+| Creator | `marco@movie.test` | `Creator@123` |
 
-> ⚠️ These are throwaway development credentials. Do not seed them in a
-> production deployment.
+## Advanced features (for the report)
+
+| Feature | Where it is used |
+|---------|------------------|
+| **AJAX** | Live navbar search (`js/search.js` → `ajax/search.php`), the Browse page search/filter (`search.php?ajax=1`), posting/deleting reviews (`movie/detail.php` → `ajax/process_comment.php`, `ajax/delete_comment.php`), and the creator "title exists" check (`creator/ajax_check_title.php`). |
+| **Triggers** | `02_triggers.sql` — rating triggers recompute each movie's `avg_rating` and `rating_count`, and write to `dbProj_audit_log`; comment moderation is also audited. |
+| **Prepared statements** | All database queries use `mysqli` prepared statements with bound parameters (see `src/Movie.php`, `src/User.php`, `src/Auth.php`), so user input never enters the SQL string. |
+| **Stored procedures** | `03_procedures.sql` — `p_rate_movie`, `p_moderate_comment`, `p_set_movie_published`, and the two report procedures used by the admin Reports page. |
+| **Advanced UI** | Glassmorphism design system (`css/theme.css`), animated cinematic hero, and responsive movie grid. |
 
 ## Notes
 
-- Passwords are stored with `AES_ENCRYPT(<plaintext>, 'your_secret_key')` and
-  verified on login (see [`src/User.php`](src/User.php) and
-  [`src/Auth.php`](src/Auth.php)). The seed script uses the same scheme so the
-  accounts work out of the box.
-- All DB access goes through the single connection authority in
-  [`src/Database.php`](src/Database.php); no other file hard-codes credentials.
+- Passwords are stored with `AES_ENCRYPT(<plaintext>, 'your_secret_key')` and verified on
+  login (`src/User.php`, `src/Auth.php`).
+- All database access goes through a single connection point in `src/Database.php`;
+  credentials are read only from `config/db.php`.
+- Poster uploads are written to `public/assets/uploads/` — that folder must be writable
+  by the web server (set it to `777` on shared hosting).
