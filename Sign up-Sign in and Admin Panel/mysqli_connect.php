@@ -1,36 +1,28 @@
 <?php
+// Auth-panel DB shim. Kept for backward compatibility with existing callers
+// (new Database()->getConnection()), but now delegates to the app's single
+// connection authority (../DBconn.php, movie_app user) instead of connecting
+// as root. Do not add new credentials here.
+require_once __DIR__ . '/../DBconn.php';
+
 class Database
 {
-    private $LOCAL_DB=0;
-
-    protected  $dbc = NULL;
+    protected $dbc = null;
 
     public function getConnection()
     {
-        if (!$this->LOCAL_DB){
-            if($this->dbc==NULL)
-              $this->dbc = mysqli_connect('localhost','root','DUMMY_PASS', 'movie_review');
-
-           if (mysqli_connect_errno()) {
-                printf("Connect failed: %s\n", mysqli_connect_error());
-                die('b0ther');
-            }
+        if ($this->dbc === null) {
+            $this->dbc = getConnection();   // shared movie_app connection
+            $this->dbc->set_charset('utf8mb4');
         }
-        else
-        {
-          $this->dbc = mysqli_connect('localhost','root','DUMMY_PASS', 'movie_review');
-           if (mysqli_connect_errno()) {
-                printf("Connect failed: %s\n", mysqli_connect_error());
-                die('b0ther');
-            }
-        }
-
         return $this->dbc;
     }
 
     public function closeDB()
     {
-         mysqli_close($this->dbc);
+        if ($this->dbc) {
+            mysqli_close($this->dbc);
+            $this->dbc = null;
+        }
     }
 }
-?>
