@@ -41,7 +41,7 @@ function s_card(array $m): string
     $grad   = "linear-gradient(135deg,#{$m['color_tl']},#{$m['color_br']})";
     return <<<HTML
     <div class="col">
-      <a href="movie-detail.php?id={$id}" class="movie-card">
+      <a href="/movie/detail.php?id={$id}" class="movie-card">
         <div class="poster-wrap" style="background:{$grad}">
           <img src="/{$poster}" alt="{$title}" loading="lazy"
                onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">

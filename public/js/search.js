@@ -60,7 +60,7 @@
       .map((m, i) => {
         const title = escapeHtml(m.title);
         return `
-        <a class="sr-item" data-idx="${i}" href="movie-detail.php?id=${m.id}">
+        <a class="sr-item" data-idx="${i}" href="/movie/detail.php?id=${m.id}">
           <img src="${escapeHtml(m.poster)}" alt=""
                onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('div'),{className:'sr-thumb',style:'background:#3d7cf5'}))">
           <div>
