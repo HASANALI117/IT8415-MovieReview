@@ -51,7 +51,7 @@ CREATE TABLE dbProj_movies (
     is_published      TINYINT(1)      NOT NULL DEFAULT 0,       -- publish workflow
     published_at      TIMESTAMP       NULL,
     view_count        INT             NOT NULL DEFAULT 0,       -- popularity metric
-    avg_rating        DECIMAL(3,2)    NOT NULL DEFAULT 0.00,    -- maintained by trigger
+    avg_rating        DECIMAL(4,2)    NOT NULL DEFAULT 0.00,    -- maintained by trigger (0-10)
     rating_count      INT             NOT NULL DEFAULT 0,       -- maintained by trigger
     created_at        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -108,7 +108,7 @@ CREATE TABLE dbProj_ratings (
         FOREIGN KEY (user_id) REFERENCES dbProj_users (user_id)
         ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT uq_ratings_user_movie UNIQUE (movie_id, user_id),
-    CONSTRAINT chk_ratings_stars CHECK (stars BETWEEN 1 AND 5)
+    CONSTRAINT chk_ratings_stars CHECK (stars BETWEEN 1 AND 10)
 ) ENGINE=InnoDB;
 
 CREATE INDEX idx_ratings_movie ON dbProj_ratings (movie_id);

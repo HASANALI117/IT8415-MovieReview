@@ -1,48 +1,18 @@
 <?php
 
-/**
- * Shared page header / layout top.
- *
- * A page sets any of these BEFORE `require`-ing this file:
- *   $page_title   string  <title> text                         (default: site name)
- *   $active_nav   string  home|search|admin|creator|profile    (highlights a nav pill)
- *   $body_class   string  extra <body> class (e.g. "home")
- *   $bg_palette   array   [tl,tr,br,bl] hex for the fixed ultrablur bg
- *                         (default: soft brand palette; home overrides via JS)
- *   $head_extra   string  raw HTML appended into <head> (page-specific CSS/JS)
- *   $container_class string extra class on the <main> wrapper
- *
- * Pair every include of this file with includes/footer.php.
- */
+// Shared page header / layout top. Pair with includes/footer.php.
+// A page may set before requiring this: $page_title, $active_nav
+// (home|browse|creator|admin), $body_class, $bg_palette, $head_extra, $container_class.
 
 require_once __DIR__ . '/session.php';
 
-/* ---------------------------------------------------------------------------
- * Base-path awareness for sub-directory deployments.
- *
- * The app is designed to run with public/ as the document root, so every link
- * uses a root-absolute path (/css, /js, /auth ...). When it is instead served
- * from a sub-folder (e.g. the lab UserDir URL
- *   http://host/~user/IT8415-MovieReview/public/ )
- * those paths break.
- *
- * Fix: emit a single <head> <base> element (see below) pointing at the app root
- * and make every in-app URL RELATIVE so the browser resolves it against that
- * base — natively, for CSS/JS/images/links AND AJAX, on every page regardless of
- * how it was reached. The output buffer just strips the leading slash so the
- * existing root-absolute markup becomes relative; no per-link source edits.
- * $BASE_PATH always ends with "/". When public/ IS the docroot it is just "/".
- * ------------------------------------------------------------------------- */
-$BASE_PATH = app_base_path();   // defined in session.php; "/" when public/ is the docroot
+// Base-path awareness for sub-folder deployments. Links use root-absolute paths
+// (/css, /js, ...); when served from a sub-folder we prefix them with the base.
+$BASE_PATH = app_base_path();   // "/" when public/ is the docroot
 $BASE_HREF = app_base_href();   // absolute scheme://host/.../public/ for must-load assets
 
-/*
- * Rewrite root-absolute in-app URLs (href="/x", src="/x", action="/x", url(/x))
- * to include the sub-folder base, so the existing markup works whether public/
- * is the document root (local) or a sub-folder (lab). Runs over the final HTML,
- * so it catches URLs however they were built. External URLs (href="http…) and
- * the explicit absolute CSS/JS below start with "h", so they're left untouched.
- */
+// Rewrite root-absolute in-app URLs (href/src/action/url) to include the base,
+// so the same markup works whether public/ is the docroot or a sub-folder.
 if (!function_exists('rewrite_base_urls')) {
   function rewrite_base_urls(string $html): string
   {
@@ -73,9 +43,7 @@ $head_extra      = $head_extra      ?? '';
 // Fixed moody brand palette for pages without a slider (deep blue/purple/teal).
 $bg_palette = $bg_palette ?? ['23306b', '3b2566', '14424f', '2a1d4d'];
 
-/** Build the 4-corner ultrablur radial-gradient stack (PHP twin of buildUltraBlurGradient in main.js).
- *  Saturated, opaque-at-corner blobs that overlap toward the centre and fill the
- *  whole viewport over the dark base — Plex-style ambient. */
+// 4-corner ultrablur radial-gradient stack (PHP twin of buildUltraBlurGradient in main.js).
 if (!function_exists('ultrablur_gradient')) {
   function ultrablur_gradient(string $tl, string $tr, string $br, string $bl): string
   {
@@ -92,7 +60,7 @@ $logged_in = is_logged_in();
 $username  = current_username();
 $role      = $_SESSION['role'] ?? '';
 
-/** nav pill helper */
+// nav pill helper
 function nav_pill(string $href, string $label, string $key, string $active): string
 {
   $cls = 'pill' . ($key === $active ? ' active' : '');

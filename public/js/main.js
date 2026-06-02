@@ -1,7 +1,6 @@
 const FALLBACK = { tl: "23306b", tr: "3b2566", br: "14424f", bl: "2a1d4d" };
 
-// UltraBlur ambient gradient (dark full-page, Plex-style; matches
-// ultrablur_gradient() in includes/header.php — keep stops in sync)
+// UltraBlur ambient gradient — matches ultrablur_gradient() in includes/header.php.
 function buildUltraBlurGradient(tl, tr, br, bl) {
   return `
     radial-gradient(ellipse 130% 130% at 0% 0%,     #${tl} 0%, transparent 78%),
@@ -11,9 +10,7 @@ function buildUltraBlurGradient(tl, tr, br, bl) {
   `;
 }
 
-// ===== Plex cinematic hero: cross-fade through featured titles, drive the
-// full-page ultrablur ambient from the current title's colors. The poster
-// strip at the hero bottom is the slide control. =====
+// Cinematic hero: cross-fade through featured titles; the poster strip is the slide control.
 (function phero() {
   const root = document.getElementById("phero");
   if (!root) return;

@@ -2,14 +2,8 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-/**
- * Single connection authority for the whole app. Every subsystem — home/search,
- * admin, creator, auth — goes through getConnection(). Credentials live in
- * config/db.php (movie_app, least-privilege). Never connect as root.
- *
- * Returns a fresh mysqli connection on each call; callers that open their own
- * connection are responsible for closing it (the OOP Data Objects do).
- */
+// Single DB connection authority. Credentials come from config/db.php.
+// Returns a fresh mysqli connection each call; callers close their own.
 function getConnection()
 {
     static $cfg = null;
@@ -24,11 +18,7 @@ function getConnection()
     return $conn;
 }
 
-/**
- * Auth-panel compatibility wrapper. Existing callers do
- * `new Database()->getConnection()`; this now delegates to the one
- * connection authority above instead of connecting as root.
- */
+// Compatibility wrapper: `new Database()->getConnection()` delegates to getConnection() above.
 class Database
 {
     protected $dbc = null;

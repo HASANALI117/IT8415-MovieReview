@@ -12,9 +12,9 @@ CREATE PROCEDURE p_rate_movie (
     IN p_stars    TINYINT
 )
 BEGIN
-    IF p_stars < 1 OR p_stars > 5 THEN
+    IF p_stars < 1 OR p_stars > 10 THEN
         SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Stars must be between 1 and 5';
+            SET MESSAGE_TEXT = 'Stars must be between 1 and 10';
     END IF;
 
     INSERT INTO dbProj_ratings (movie_id, user_id, stars)

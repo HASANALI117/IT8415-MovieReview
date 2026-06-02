@@ -1,9 +1,4 @@
-/* =====================================================================
-   theme.css — single glassmorphism design system for the whole app.
-   Light glassmorphism over a full-page ultrablur ambient background.
-   Loaded on every page via includes/header.php. Supersedes style.css
-   and the legacy auth.css / per-page inline <style> blocks.
-   ===================================================================== */
+/* theme.css — single glassmorphism design system for the whole app. Light glassmorphism over a full-page ultrablur ambient background. Loaded on every page via includes/header.php. Supersedes style.css and the legacy auth.css / per-page inline <style> blocks. */
 
 :root {
   color-scheme: dark;
@@ -50,10 +45,7 @@ body {
   min-height: 100%;
 }
 
-/* Base colour lives on <html> so it paints the canvas behind the fixed
-   .app-bg ambient. body stays transparent — a solid body background would
-   cover the z-index:-2 ambient over the content area (ambient would then only
-   show below the body box, as on the movie detail page). */
+/* Base colour lives on <html> so it paints the canvas behind the fixed .app-bg ambient. body stays transparent — a solid body background would cover the z-index:-2 ambient over the content area (ambient would then only show below the body box, as on the movie detail page). */
 html {
   background: var(--bg-base);
 }
@@ -70,11 +62,7 @@ a {
   color: inherit;
 }
 
-/* =====================================================================
-   Full-page ultrablur ambient background
-   Two stacked fixed layers for crossfade; painted by JS (home, follows
-   slider) or by an inline style on .app-bg (other pages, fixed palette).
-   ===================================================================== */
+/* Full-page ultrablur ambient background Two stacked fixed layers for crossfade; painted by JS (home, follows slider) or by an inline style on .app-bg (other pages, fixed palette). */
 .app-bg,
 .app-bg-next {
   position: fixed;
@@ -101,9 +89,7 @@ body::before {
   pointer-events: none;
 }
 
-/* =====================================================================
-   Layout container
-   ===================================================================== */
+/* Layout container */
 .app-container {
   max-width: 1280px;
   margin: 0 auto;
@@ -120,9 +106,7 @@ body::before {
   padding-top: 0;
 }
 
-/* =====================================================================
-   Glass primitives
-   ===================================================================== */
+/* Glass primitives */
 .glass-panel {
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
@@ -222,14 +206,12 @@ body::before {
 .form-select:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
-  /* Override Bootstrap, which sets a white background on .form-control:focus.
-     Keep the frosted glass fill while focused / typing. */
+  /* Override Bootstrap, which sets a white background on .form-control:focus. Keep the frosted glass fill while focused / typing. */
   background: var(--glass-bg-strong);
   color: var(--ink);
 }
 
-/* Browser autofill paints inputs solid white/yellow — repaint to glass and keep
-   the light text so focus + active typing stay on-theme. */
+/* Browser autofill paints inputs solid white/yellow — repaint to glass and keep the light text so focus + active typing stay on-theme. */
 .glass-input:-webkit-autofill,
 .glass-input:-webkit-autofill:focus,
 .glass-textarea:-webkit-autofill,
@@ -347,22 +329,18 @@ body::before {
   margin: 0.25rem 0 0;
 }
 
-/* =====================================================================
-   Navbar (shared glass component)
-   ===================================================================== */
+/* Navbar (shared glass component) */
 .app-nav {
   position: sticky;
   top: 0;
   z-index: 50;
-  /* No solid background colour — a frosted glass blur lets the page show
-     through for a consistent glassmorphism aesthetic across every page. */
+  /* No solid background colour — a frosted glass blur lets the page show through for a consistent glassmorphism aesthetic across every page. */
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
   background: var(--glass-bg);
   border-bottom: 1px solid var(--glass-border-soft);
 }
-/* On the home page the nav floats over the cinematic hero — same glass
-   treatment, just positioned absolutely so the hero sits underneath it. */
+/* On the home page the nav floats over the cinematic hero — same glass treatment, just positioned absolutely so the hero sits underneath it. */
 body.home .app-nav {
   position: absolute;
   left: 0;
@@ -415,8 +393,7 @@ body.home .app-nav {
 .nav-tabs > li {
   display: inline-flex;
 }
-/* Every nav item shares one consistent glass-button design (matches the
-   Home button and the .glass-btn primitive): bordered pill, no underline. */
+/* Every nav item shares one consistent glass-button design (matches the Home button and the .glass-btn primitive): bordered pill, no underline. */
 .nav-tab {
   display: inline-flex;
   align-items: center;
@@ -466,7 +443,7 @@ body.home .app-nav {
   color: var(--ink-soft);
 }
 
-/* ===== Plex cinematic hero ===== */
+/* Plex cinematic hero */
 .phero {
   position: relative;
   height: 100vh;
@@ -483,8 +460,7 @@ body.home .app-nav {
 .phero-slide.active {
   opacity: 1;
 }
-/* backdrop anchored top-right; a radial mask fades it out toward the centre,
-   left and bottom so the image dissolves into the ultrablur ambient (Plex blend) */
+/* backdrop anchored top-right; a radial mask fades it out toward the centre, left and bottom so the image dissolves into the ultrablur ambient (Plex blend) */
 .phero-backdrop {
   position: absolute;
   inset: 0;
@@ -503,8 +479,7 @@ body.home .app-nav {
     transparent 70%
   );
 }
-/* gentle shading: keep left-side text legible + fade the bottom into the page,
-   but let the ultrablur colours stay vivid like Plex */
+/* gentle shading: keep left-side text legible + fade the bottom into the page, but let the ultrablur colours stay vivid like Plex */
 .phero-shade {
   position: absolute;
   inset: 0;
@@ -622,7 +597,7 @@ body.home .app-nav {
   outline-offset: 2px;
 }
 
-/* ===== Horizontal poster rails ===== */
+/* Horizontal poster rails */
 .home-main {
   max-width: none;
   padding: 0;
@@ -868,9 +843,7 @@ body.home .app-nav {
   font-size: 0.9rem;
 }
 
-/* =====================================================================
-   Hero slider (home)
-   ===================================================================== */
+/* Hero slider (home) */
 .hero-section {
   position: relative;
   height: 48vh;
@@ -1046,17 +1019,14 @@ body.home .app-nav {
   background: #fff;
 }
 
-/* =====================================================================
-   Movie grid + cards
-   ===================================================================== */
+/* Movie grid + cards */
 .section-label {
   font-weight: 700;
   font-size: 1.4rem;
   margin: 0.5rem 0 1.25rem;
   letter-spacing: -0.01em;
 }
-/* frameless: only the poster carries the rounding + shadow; the title/desc
-   sit below on transparent ground, left-aligned (same everywhere). */
+/* frameless: only the poster carries the rounding + shadow; the title/desc sit below on transparent ground, left-aligned (same everywhere). */
 .movie-card {
   display: block;
   background: transparent;
@@ -1196,9 +1166,7 @@ body.home .app-nav {
   margin: 0.5rem 0;
 }
 
-/* =====================================================================
-   Auth card (login / register / small forms)
-   ===================================================================== */
+/* Auth card (login / register / small forms) */
 .auth-wrap {
   min-height: calc(100vh - 70px);
   display: flex;
@@ -1251,10 +1219,7 @@ body.home .app-nav {
   color: var(--accent-dk);
 }
 
-/* =====================================================================
-   Creator forms (add / edit movie) — validation + media helpers
-   Class names match the inline validation JS; do not rename.
-   ===================================================================== */
+/* Creator forms (add / edit movie) — validation + media helpers Class names match the inline validation JS; do not rename. */
 .form-group {
   margin-bottom: 18px;
 }
@@ -1393,9 +1358,7 @@ body.home .app-nav {
   padding-bottom: 10px;
 }
 
-/* =====================================================================
-   Movie detail page (jQuery-driven) — class names match the inline JS
-   ===================================================================== */
+/* Movie detail page (jQuery-driven) — class names match the inline JS */
 .pdetail-top {
   display: flex;
   gap: 40px;
@@ -1515,9 +1478,7 @@ body.home .app-nav {
   cursor: pointer;
 }
 
-/* =====================================================================
-   Responsive
-   ===================================================================== */
+/* Responsive */
 @media (max-width: 992px) {
   .nav-links {
     order: 3;

@@ -1,8 +1,5 @@
 <?php
-/**
- * Admin section sub-navigation. Set $admin_tab before include:
- *   content | comments | reports | users
- */
+// Admin section sub-nav. Set $admin_tab before include: content|comments|reports|users
 $admin_tab = $admin_tab ?? '';
 $admin_links = [
     'content'  => ['/admin/movies.php',   'Content'],
