@@ -213,6 +213,25 @@ body::before {
 .form-select:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
+  /* Override Bootstrap, which sets a white background on .form-control:focus.
+     Keep the frosted glass fill while focused / typing. */
+  background: var(--glass-bg-strong);
+  color: var(--ink);
+}
+
+/* Browser autofill paints inputs solid white/yellow — repaint to glass and keep
+   the light text so focus + active typing stay on-theme. */
+.glass-input:-webkit-autofill,
+.glass-input:-webkit-autofill:focus,
+.glass-textarea:-webkit-autofill,
+.form-control:-webkit-autofill,
+.form-control:-webkit-autofill:focus,
+.form-select:-webkit-autofill {
+  -webkit-text-fill-color: var(--ink);
+  caret-color: var(--ink);
+  -webkit-box-shadow: 0 0 0 1000px rgba(40, 44, 54, 0.92) inset;
+  box-shadow: 0 0 0 1000px rgba(40, 44, 54, 0.92) inset;
+  transition: background-color 9999s ease-in-out 0s;
 }
 .glass-textarea {
   resize: vertical;
@@ -372,12 +391,20 @@ body.home .app-nav {
 
 /* centred icon tabs */
 .nav-tabs {
+  /* Neutralise Bootstrap's .nav-tabs bottom border (we reuse the class name). */
+  --bs-nav-tabs-border-color: transparent;
+  border-bottom: 0;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.3rem;
   list-style: none;
   margin: 0;
   padding: 0;
+}
+/* auth actions sit inline in the tabs row */
+.nav-tabs > li {
+  display: inline-flex;
 }
 /* Every nav item shares one consistent glass-button design (matches the
    Home button and the .glass-btn primitive): bordered pill, no underline. */
@@ -1235,7 +1262,8 @@ body.home .app-nav {
 }
 .error-field {
   border-color: var(--danger) !important;
-  background: #fff8f8 !important;
+  /* translucent danger tint instead of solid white, to match the glass theme */
+  background: rgba(214, 81, 81, 0.12) !important;
 }
 .err-label {
   display: block;
@@ -1476,22 +1504,6 @@ body.home .app-nav {
   top: 12px;
   color: var(--danger);
   cursor: pointer;
-}
-
-/* =====================================================================
-   Footer
-   ===================================================================== */
-.app-footer {
-  margin-top: 3rem;
-  padding: 1.5rem 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  color: var(--ink-soft);
-  font-size: 0.85rem;
-  text-align: center;
-}
-.app-footer span {
-  font-weight: 600;
-  color: var(--ink);
 }
 
 /* =====================================================================

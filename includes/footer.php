@@ -8,19 +8,12 @@
 $page_scripts = $page_scripts ?? [];
 $site_name    = $site_name ?? 'MovieReview';
 $hide_footer  = $hide_footer ?? false;
+$base_href    = app_base_href();   // explicit absolute base so core JS always loads
 ?>
   </main>
 
-  <?php if (!$hide_footer): ?>
-  <footer class="app-footer">
-    <div class="app-container">
-      <span><?= htmlspecialchars($site_name) ?></span> — IT8415 Database Programming 2 · Group Project
-    </div>
-  </footer>
-  <?php endif; ?>
-
-  <script src="/js/main.js"></script>
-  <script src="/js/search.js"></script>
+  <script src="<?= htmlspecialchars($base_href, ENT_QUOTES) ?>js/main.js"></script>
+  <script src="<?= htmlspecialchars($base_href, ENT_QUOTES) ?>js/search.js"></script>
   <?php foreach ($page_scripts as $src): ?>
     <script src="<?= htmlspecialchars($src) ?>"></script>
   <?php endforeach; ?>
