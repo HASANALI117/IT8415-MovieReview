@@ -30,10 +30,11 @@ if (isset($_POST['submitted'])) {
     list($check, $data) = checkLogin($_POST['Email'], $_POST['Password']);
 
     if ($check) {
-        $_SESSION['Username'] = $data['Username'];
-        $_SESSION['Role'] = $data['Role'];
-        $_SESSION['Id'] = $data['UserId'];
-        $_SESSION['Pwd'] = $data['Pwd'];
+        // Single app-wide session convention (lowercase): every guard across
+        // admin_*, creator_*, and the M3 pages checks these exact keys.
+        $_SESSION['user_id']  = $data['UserId'];
+        $_SESSION['username'] = $data['Username'];
+        $_SESSION['role']     = $data['Role'];
 
         $url = absolute_url('home.php');
         header("Location: $url");
