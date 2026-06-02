@@ -1,6 +1,6 @@
 <?php
 require_once 'includes/session.php';
-require_once 'includes/data.php';
+require_once 'Movie.php';
 
 $logged_in = is_logged_in();
 $username   = current_username();
@@ -10,13 +10,13 @@ $page   = max(1, (int)($_GET['page'] ?? 1));
 $per    = 12;
 $offset = ($page - 1) * $per;
 
-[$movies, $total] = get_movies($per, $offset);
+[$movies, $total] = Movie::getPublished($per, $offset);
 $total_pages = (int)ceil($total / $per);
 
 // Hero slider: prefer movies that have a real downloaded fanart background.
-$featured = get_featured(5);
+$featured = Movie::getFeatured(5);
 
-$genres   = genre_list();
+$genres   = Movie::genreList();
 $site_name = 'MovieReview';
 
 /** Build a movie card. Poster falls back to an ultrablur gradient block if missing. */

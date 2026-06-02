@@ -1,11 +1,11 @@
 <?php
 require_once 'includes/session.php';
-require_once 'includes/data.php';
+require_once 'Movie.php';
 
 $logged_in = is_logged_in();
 $username   = current_username();
 $site_name  = 'MovieReview';
-$genres     = genre_list();
+$genres     = Movie::genreList();
 
 // Filters from GET
 $q        = trim($_GET['q'] ?? '');
@@ -18,7 +18,7 @@ $page   = max(1, (int)($_GET['page'] ?? 1));
 $per    = 10;
 $offset = ($page - 1) * $per;
 
-[$results, $total] = search_movies(
+[$results, $total] = Movie::searchPublic(
     ['q' => $q, 'genre' => $genre, 'date_from' => $dateFrom, 'date_to' => $dateTo, 'sort' => $sort],
     $per,
     $offset

@@ -276,5 +276,149 @@ class Movie {
         return $ids;
     }
 
+    /* =========================================================================
+       Public site read API (home page + search).
+       These map the normalized schema onto the flat key shape the front-end
+       templates use: id, title, description, rating, year, genre, poster,
+       fanart_bg, fanart_logo, color_*, views, created_at.
+       ========================================================================= */
+
+    // SELECT projection shared by all public listing queries. `m` = dbProj_movies.
+    private static function publicSelect(): string
+    {
+        return "
+            SELECT m.movie_id                                            AS id,
+                   m.title                                               AS title,
+                   COALESCE(NULLIF(m.short_description,''), m.synopsis, '') AS description,
+                   m.avg_rating                                          AS rating,
+                   m.release_year                                        AS year,
+                   m.image_url                                           AS poster,
+                   m.fanart_bg                                           AS fanart_bg,
+                   m.fanart_logo                                         AS fanart_logo,
+                   m.color_tl, m.color_tr, m.color_br, m.color_bl,
+                   m.view_count                                          AS views,
+                   m.created_at                                          AS created_at,
+                   COALESCE((
+                       SELECT c.name
+                         FROM dbProj_movie_categories mc
+                         JOIN dbProj_categories c ON c.category_id = mc.category_id
+                        WHERE mc.movie_id = m.movie_id
+                        ORDER BY c.category_id
+                        LIMIT 1
+                   ), '')                                                AS genre
+              FROM dbProj_movies m
+        ";
+    }
+
+    // Genre filter labels for the navbar / tabs. 'All' first, then category names.
+    public static function genreList(): array
+    {
+        $genres = ['All'];
+        $conn = getConnection();
+        if ($res = $conn->query("SELECT name FROM dbProj_categories ORDER BY name")) {
+            while ($row = $res->fetch_assoc()) $genres[] = $row['name'];
+        }
+        $conn->close();
+        return $genres;
+    }
+
+    // One page of published movies, newest first. Returns [rows, totalCount].
+    public static function getPublished(int $limit = 12, int $offset = 0): array
+    {
+        $conn = getConnection();
+        $total = (int)($conn->query(
+            "SELECT COUNT(*) c FROM dbProj_movies WHERE is_published = 1"
+        )->fetch_assoc()['c'] ?? 0);
+
+        $stmt = $conn->prepare(
+            self::publicSelect() .
+            " WHERE m.is_published = 1
+              ORDER BY m.created_at DESC, m.movie_id DESC
+              LIMIT ? OFFSET ?"
+        );
+        $stmt->bind_param('ii', $limit, $offset);
+        $stmt->execute();
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+        $conn->close();
+        return [$rows, $total];
+    }
+
+    // Hero slider set: prefer published movies that actually have a downloaded
+    // fanart background, falling back to newest published.
+    public static function getFeatured(int $n = 5): array
+    {
+        [$rows] = self::getPublished(60, 0);
+        $withBg = array_values(array_filter($rows, fn($m) =>
+            !empty($m['fanart_bg']) && is_file(__DIR__ . '/' . $m['fanart_bg'])));
+        $pick = count($withBg) >= $n ? $withBg : array_merge($withBg, $rows);
+
+        $seen = [];
+        $out  = [];
+        foreach ($pick as $m) {
+            if (isset($seen[$m['id']])) continue;
+            $seen[$m['id']] = true;
+            $out[] = $m;
+            if (count($out) >= $n) break;
+        }
+        return $out;
+    }
+
+    /**
+     * Search + filter published movies. $filters: q, genre, date_from, date_to, sort.
+     * Dynamic WHERE with bound params — user input never touches the SQL string.
+     * Returns [rows, totalMatched].
+     */
+    public static function searchPublic(array $filters, int $limit = 10, int $offset = 0): array
+    {
+        $q        = trim($filters['q'] ?? '');
+        $genre    = trim($filters['genre'] ?? '');
+        $dateFrom = trim($filters['date_from'] ?? '');
+        $dateTo   = trim($filters['date_to'] ?? '');
+        $sort     = $filters['sort'] ?? 'date';
+
+        $order = match ($sort) {
+            'rating' => 'm.avg_rating DESC',
+            'title'  => 'm.title ASC',
+            default  => 'm.created_at DESC, m.movie_id DESC',
+        };
+
+        $where = ['m.is_published = 1'];
+        $types = '';
+        $vals  = [];
+        if ($q !== '') {
+            $where[] = '(m.title LIKE ? OR m.short_description LIKE ? OR m.synopsis LIKE ?)';
+            $like = '%' . $q . '%';
+            $types .= 'sss';
+            $vals[] = $like; $vals[] = $like; $vals[] = $like;
+        }
+        if ($genre !== '' && strcasecmp($genre, 'All') !== 0) {
+            $where[] = 'EXISTS (SELECT 1 FROM dbProj_movie_categories mc
+                                JOIN dbProj_categories c ON c.category_id = mc.category_id
+                               WHERE mc.movie_id = m.movie_id AND c.name = ?)';
+            $types .= 's';
+            $vals[] = $genre;
+        }
+        if ($dateFrom !== '') { $where[] = 'm.release_year >= ?'; $types .= 'i'; $vals[] = (int)$dateFrom; }
+        if ($dateTo   !== '') { $where[] = 'm.release_year <= ?'; $types .= 'i'; $vals[] = (int)$dateTo; }
+        $clause = 'WHERE ' . implode(' AND ', $where);
+
+        $conn = getConnection();
+
+        $cntStmt = $conn->prepare("SELECT COUNT(*) c FROM dbProj_movies m $clause");
+        if ($types !== '') $cntStmt->bind_param($types, ...$vals);
+        $cntStmt->execute();
+        $total = (int)$cntStmt->get_result()->fetch_assoc()['c'];
+        $cntStmt->close();
+
+        $stmt = $conn->prepare(self::publicSelect() . " $clause ORDER BY $order LIMIT ? OFFSET ?");
+        $stmt->bind_param($types . 'ii', ...array_merge($vals, [$limit, $offset]));
+        $stmt->execute();
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+        $conn->close();
+        return [$rows, $total];
+    }
+
 }
 ?>

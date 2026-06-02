@@ -22,3 +22,6 @@ Thumbs.db
 *.log
 
 ultrablur.js
+
+# claude code local tooling
+.claude/

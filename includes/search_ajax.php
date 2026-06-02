@@ -4,7 +4,7 @@ session_start();
 header('Content-Type: application/json');
 header('X-Content-Type-Options: nosniff');
 
-require_once __DIR__ . '/data.php';
+require_once __DIR__ . '/../Movie.php';
 
 $q = trim($_GET['q'] ?? '');
 if (mb_strlen($q) < 2) {
@@ -12,7 +12,7 @@ if (mb_strlen($q) < 2) {
     exit;
 }
 
-[$results] = search_movies(['q' => $q], 6, 0);
+[$results] = Movie::searchPublic(['q' => $q], 6, 0);
 
 $slim = array_map(fn($m) => [
     'id'     => $m['id'],
