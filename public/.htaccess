@@ -1,0 +1,6 @@
+# public/ is the web root (Apache DocumentRoot). Only browsable pages live here.
+# No directory listings.
+Options -Indexes
+
+# Default document
+DirectoryIndex index.php
