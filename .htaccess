@@ -1,0 +1,25 @@
+# =====================================================================
+#  DocumentRoot MUST point to the public/ subfolder of this project.
+#
+#  XAMPP virtual host example (httpd-vhosts.conf):
+#     <VirtualHost *:80>
+#         DocumentRoot "C:/xampp/htdocs/IT8415-MovieReview/public"
+#         <Directory   "C:/xampp/htdocs/IT8415-MovieReview/public">
+#             AllowOverride All
+#             Require all granted
+#         </Directory>
+#     </VirtualHost>
+#
+#  Or run the PHP built-in server with public/ as the root:
+#     php -S localhost:8000 -t public
+#
+#  This file only matters if Apache is (mis)configured to serve the project
+#  ROOT instead of public/. In that case, block everything outside public/
+#  as a defense-in-depth fallback so src/, config/, database/, the seeder, etc.
+#  can never be fetched over HTTP.
+# =====================================================================
+
+RedirectMatch 404 ^/(src|config|database|includes|node_modules|nbproject)/
+<FilesMatch "(?i)(seed\.php|ultrablur\.js|package(-lock)?\.json|CLAUDE\.md)$">
+    Require all denied
+</FilesMatch>
