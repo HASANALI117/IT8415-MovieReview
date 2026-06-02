@@ -19,7 +19,10 @@
 #  can never be fetched over HTTP.
 # =====================================================================
 
-RedirectMatch 404 ^/(src|config|database|includes|node_modules|nbproject)/
-<FilesMatch "(?i)(seed\.php|ultrablur\.js|package(-lock)?\.json|CLAUDE\.md)$">
-    Require all denied
-</FilesMatch>
+# Disabled on the lab UserDir host: these directives can trigger an Apache 500
+# when the server's AllowOverride doesn't permit them. Re-enable on a proper
+# Apache vhost (AllowOverride All) for the defense-in-depth protection.
+# RedirectMatch 404 ^/(src|config|database|includes|node_modules|nbproject)/
+# <FilesMatch "(?i)(seed\.php|ultrablur\.js|package(-lock)?\.json|CLAUDE\.md)$">
+#     Require all denied
+# </FilesMatch>

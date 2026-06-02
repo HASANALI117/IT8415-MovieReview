@@ -4,7 +4,7 @@
 // Loaded by src/Database.php — no other file hard-codes these.
 return [
     'host' => 'localhost',
-    'user' => 'movie_app',
+    'user' => 'DUMMY_USER',
     'pass' => 'DUMMY_PASS',
-    'name' => 'movie_review',
+    'name' => 'DUMMY_DB',
 ];

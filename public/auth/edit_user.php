@@ -3,7 +3,7 @@ require_once __DIR__ . '/../../includes/session.php';
 
 // admin only
 if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
-    header('Location: /index.php');
+    header('Location: ' . app_url('index.php'));
     exit();
 }
 

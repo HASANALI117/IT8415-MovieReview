@@ -16,7 +16,7 @@ if (isset($_POST['submitted'])) {
         $_SESSION['username'] = $data['Username'];
         $_SESSION['role']     = $data['Role'];
 
-        header('Location: /auth/home.php');
+        header('Location: ' . app_url('index.php'));
         exit();
     } else {
         $errors = $data;

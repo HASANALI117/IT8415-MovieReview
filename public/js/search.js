@@ -1,4 +1,6 @@
 (function () {
+  // App base path (set in includes/header.php). "/" when public/ is the docroot.
+  const BASE = window.BASE || "/";
   const toggle = document.getElementById("searchToggle");
   const navBox = document.getElementById("navSearch");
   const input = document.getElementById("liveSearch");
@@ -37,7 +39,7 @@
     spinner.classList.add("show");
     try {
       const res = await fetch(
-        "/ajax/search.php?q=" + encodeURIComponent(q),
+        BASE + "ajax/search.php?q=" + encodeURIComponent(q),
         { signal: controller.signal },
       );
       const data = await res.json();
@@ -60,8 +62,8 @@
       .map((m, i) => {
         const title = escapeHtml(m.title);
         return `
-        <a class="sr-item" data-idx="${i}" href="/movie/detail.php?id=${m.id}">
-          <img src="${escapeHtml(m.poster)}" alt=""
+        <a class="sr-item" data-idx="${i}" href="${BASE}movie/detail.php?id=${m.id}">
+          <img src="${BASE}${escapeHtml(m.poster)}" alt=""
                onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('div'),{className:'sr-thumb',style:'background:#3d7cf5'}))">
           <div>
             <div class="sr-title">${title}</div>

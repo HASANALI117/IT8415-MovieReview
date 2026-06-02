@@ -92,6 +92,9 @@ class User {
             }
 
             if ($stmt && $stmt->execute()) {
+                if ($this->userId === null) {
+                    $this->userId = $this->dbc->insert_id;   // expose new id for auto-login
+                }
                 return true;
             } else {
                 $this->displayError($q);

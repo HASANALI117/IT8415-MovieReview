@@ -7,5 +7,5 @@ $_SESSION = array();
 session_destroy();
 setcookie('PHPSESSID', '', time() - 3600, '/', '', 0, 0);
 
-header('Location: /auth/login.php');
+header('Location: ' . app_url('auth/login.php'));
 exit();
