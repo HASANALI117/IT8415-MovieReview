@@ -16,6 +16,51 @@
 
 require_once __DIR__ . '/session.php';
 
+/* ---------------------------------------------------------------------------
+ * Base-path awareness for sub-directory deployments.
+ *
+ * The app is designed to run with public/ as the document root, so every link
+ * uses a root-absolute path (/css, /js, /auth ...). When it is instead served
+ * from a sub-folder (e.g. the lab UserDir URL
+ *   http://host/~user/IT8415-MovieReview/public/ )
+ * those paths break.
+ *
+ * Fix: emit a single <head> <base> element (see below) pointing at the app root
+ * and make every in-app URL RELATIVE so the browser resolves it against that
+ * base — natively, for CSS/JS/images/links AND AJAX, on every page regardless of
+ * how it was reached. The output buffer just strips the leading slash so the
+ * existing root-absolute markup becomes relative; no per-link source edits.
+ * $BASE_PATH always ends with "/". When public/ IS the docroot it is just "/".
+ * ------------------------------------------------------------------------- */
+$BASE_PATH = app_base_path();   // defined in session.php; "/" when public/ is the docroot
+$BASE_HREF = app_base_href();   // absolute scheme://host/.../public/ for must-load assets
+
+/*
+ * Rewrite root-absolute in-app URLs (href="/x", src="/x", action="/x", url(/x))
+ * to include the sub-folder base, so the existing markup works whether public/
+ * is the document root (local) or a sub-folder (lab). Runs over the final HTML,
+ * so it catches URLs however they were built. External URLs (href="http…) and
+ * the explicit absolute CSS/JS below start with "h", so they're left untouched.
+ */
+if (!function_exists('rewrite_base_urls')) {
+    function rewrite_base_urls(string $html): string
+    {
+        $b = app_base_path();
+        if ($b === '/') return $html;          // public/ is the docroot — nothing to do
+        return strtr($html, [
+            'href="/'   => 'href="' . $b,
+            "href='/"   => "href='" . $b,
+            'src="/'    => 'src="' . $b,
+            "src='/"    => "src='" . $b,
+            'action="/' => 'action="' . $b,
+            "url('/"    => "url('" . $b,
+            'url("/'    => 'url("' . $b,
+            'url(/'     => 'url(' . $b,
+        ]);
+    }
+}
+ob_start('rewrite_base_urls');   // PHP flushes this through the callback at request end
+
 $site_name = 'MovieReview';
 
 $page_title      = $page_title      ?? $site_name;
@@ -60,10 +105,21 @@ function nav_pill(string $href, string $label, string $key, string $active): str
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?= htmlspecialchars($page_title) ?></title>
+  <!-- Critical inline styles: applied instantly so there's no flash of unstyled
+       content (white page / giant SVG icons) before theme.css finishes loading. -->
+  <style>
+    html,body{margin:0;min-height:100%;background:#0b0d12;color:#eef1f6;
+      font-family:"DM Sans",system-ui,-apple-system,sans-serif}
+    .nav-tab svg,.glass-btn svg{width:20px;height:20px}
+  </style>
+  <!-- Base path for JS-built URLs (fetch/ajax). -->
+  <script>window.BASE = <?= json_encode($BASE_PATH) ?>;</script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
-  <link href="/css/theme.css" rel="stylesheet">
+  <!-- Explicit absolute URL so the stylesheet always loads (never depends on
+       link rewriting) — this is what prevents the flash of unstyled content. -->
+  <link href="<?= htmlspecialchars($BASE_HREF, ENT_QUOTES) ?>css/theme.css" rel="stylesheet">
   <?= $head_extra ?>
 </head>
 
@@ -79,7 +135,7 @@ function nav_pill(string $href, string $label, string $key, string $active): str
 
       <!-- left: avatar — only shown for signed-in users -->
       <?php if ($logged_in): ?>
-        <a href="/auth/home.php" class="nav-avatar" title="<?= htmlspecialchars($username) ?>">
+        <a href="/index.php" class="nav-avatar" title="<?= htmlspecialchars($username) ?>">
           <?= strtoupper(substr($username ?: 'U', 0, 1)) ?>
         </a>
       <?php endif; ?>
@@ -114,17 +170,14 @@ function nav_pill(string $href, string $label, string $key, string $active): str
             </a>
           </li>
         <?php endif; ?>
-      </ul>
-
-      <!-- right: clock + account -->
-      <div class="nav-right">
+        <!-- auth actions — now part of the tabs row (was the separate nav-right) -->
         <?php if ($logged_in): ?>
-          <a href="/auth/logout.php" class="glass-btn glass-btn--sm">Logout</a>
+          <li><a href="/auth/logout.php" class="glass-btn glass-btn--sm">Logout</a></li>
         <?php else: ?>
-          <a href="/auth/login.php" class="glass-btn glass-btn--sm glass-btn--accent">Login</a>
-          <a href="/auth/register.php" class="glass-btn glass-btn--sm">Register</a>
+          <li><a href="/auth/login.php" class="glass-btn glass-btn--sm glass-btn--accent">Login</a></li>
+          <li><a href="/auth/register.php" class="glass-btn glass-btn--sm">Register</a></li>
         <?php endif; ?>
-      </div>
+      </ul>
     </div>
   </nav>
 

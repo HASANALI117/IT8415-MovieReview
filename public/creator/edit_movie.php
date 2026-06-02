@@ -8,7 +8,7 @@ require_once __DIR__ . '/../../src/Movie.php';
 
 // access control, creators and admins only
 if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['creator', 'admin'])) {
-    header('Location: /index.php');
+    header('Location: ' . app_url('index.php'));
     exit;
 }
 
@@ -54,9 +54,8 @@ $formData = [
     'selected_cats'     => Movie::getCategoryIds($movie_id)
 ];
 
-// current image and media, shown as existing files
+// current image, shown as an existing file
 $current_image = $movie->getImageUrl();
-$current_media = $movie->getMediaUrl();
 
 // -------------------------------------------------------
 // POST: process form submission
@@ -95,17 +94,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // new media upload, keep existing if no new file chosen
-    $media_url = $current_media;
-    if (!empty($_FILES['media']['name'])) {
-        $mediaResult = uploadFile($_FILES['media'], 'media', ['mp4','mp3','mov','avi'], 50);
-        if ($mediaResult['error']) {
-            $errors[] = $mediaResult['error'];
-        } else {
-            $media_url = $mediaResult['path'];
-        }
-    }
-
     // save if no errors
     if (empty($errors)) {
         $movie->setTitle($formData['title']);
@@ -114,7 +102,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $movie->setReleaseYear((int)$formData['release_year']);
         $movie->setDurationMin((int)$formData['duration_min']);
         $movie->setImageUrl($image_url);
-        $movie->setMediaUrl($media_url);
         $movie->setCreatedBy($_SESSION['user_id']);
 
         $ok = $movie->updateMovie();
@@ -129,9 +116,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // update previews to reflect new uploads on error redisplay
+    // update preview to reflect a new upload on error redisplay
     $current_image = $image_url;
-    $current_media = $media_url;
 }
 
 // -------------------------------------------------------
@@ -150,7 +136,17 @@ function uploadFile($file, $folder, array $allowedExt, $maxMB) {
     // Store under the public web root so the file is reachable at /assets/uploads/...
     $webDir = 'assets/uploads/' . $folder;   // saved in DB; served from '/' + this
     $fsDir  = __DIR__ . '/../' . $webDir;     // public/assets/uploads/<folder>
-    if (!is_dir($fsDir)) mkdir($fsDir, 0755, true);
+
+    // Create the folder if missing (0777 so the web-server user can write into
+    // it on shared hosting). If the parent isn't writable this fails -> see the
+    // chmod note in README. We still try move_uploaded_file and report clearly.
+    if (!is_dir($fsDir)) @mkdir($fsDir, 0777, true);
+    if (is_dir($fsDir)) @chmod($fsDir, 0777);
+
+    if (!is_dir($fsDir) || !is_writable($fsDir))
+        return ['path' => '', 'error' =>
+            'Upload folder is not writable on the server. Set permissions to 777 on '
+            . 'public/assets/uploads (and its sub-folders).'];
 
     // unique filename to avoid collisions
     $newName = uniqid('', true) . '.' . $ext;
@@ -253,9 +249,9 @@ require __DIR__ . '/../../includes/header.php';
       </div>
     </div>
 
-    <!-- media -->
+    <!-- poster -->
     <div class="glass-panel form-card">
-      <h3>Media</h3>
+      <h3>Poster</h3>
 
       <div class="form-group">
         <label for="image">
@@ -279,30 +275,6 @@ require __DIR__ . '/../../includes/header.php';
         <div class="file-preview" id="imagePreview">
           <img id="imageThumb" src="" alt="new preview">
           <div class="fname" id="imageName"></div>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="media">
-          Trailer / Video / Audio
-          <small style="font-weight:normal;color:var(--ink-faint)">(leave blank to keep existing)</small>
-        </label>
-
-        <?php if ($current_media): ?>
-          <div class="existing-file">
-            <span>📎</span>
-            <div>
-              <span class="lbl">Current media file</span>
-              <span><?= htmlspecialchars(basename($current_media)) ?></span>
-            </div>
-          </div>
-        <?php endif; ?>
-
-        <input type="file" id="media" name="media" class="form-control"
-               accept=".mp4,.mp3,.mov,.avi" onchange="showMediaName(this)">
-        <span class="err-label" id="mediaErr"></span>
-        <div class="file-preview" id="mediaPreview">
-          <div class="fname" id="mediaName"></div>
         </div>
       </div>
     </div>
@@ -396,15 +368,6 @@ function previewImage(input) {
     }
 }
 
-function showMediaName(input) {
-    const preview = document.getElementById('mediaPreview');
-    const name    = document.getElementById('mediaName');
-    if (input.files && input.files[0]) {
-        name.textContent      = '📎 ' + input.files[0].name;
-        preview.style.display = 'block';
-    }
-}
-
 // AJAX: check if title already exists (excluding this movie) as user types
 
 function checkTitleAjax() {
@@ -432,7 +395,7 @@ function checkTitleAjax() {
             }
         }
     };
-    xmlhttp.open("GET", "ajax_check_title.php?title=" + encodeURIComponent(title)
+    xmlhttp.open("GET", (window.BASE || '/') + "creator/ajax_check_title.php?title=" + encodeURIComponent(title)
                         + "&exclude=" + exclude, true);
     xmlhttp.send();
 }

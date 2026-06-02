@@ -377,11 +377,13 @@ class Movie {
         $dateTo   = trim($filters['date_to'] ?? '');
         $sort     = $filters['sort'] ?? 'date';
 
+        // "Newest" (the default) = newest to oldest by release year. release_year
+        // is nullable, so push NULLs last and tie-break on recency / id.
         $order = match ($sort) {
             'rating' => 'm.avg_rating DESC',
             'views'  => 'm.view_count DESC, m.avg_rating DESC',
             'title'  => 'm.title ASC',
-            default  => 'm.created_at DESC, m.movie_id DESC',
+            default  => 'm.release_year IS NULL, m.release_year DESC, m.created_at DESC, m.movie_id DESC',
         };
 
         $where = ['m.is_published = 1'];
